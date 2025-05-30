@@ -1,10 +1,10 @@
-
 import { Button } from "@/components/ui/button";
 import { Card, CardContent } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Edit, Trash2, Calendar, User, AlertCircle } from "lucide-react";
 import { Task, Employee } from "@/pages/Index";
+import Search from "./Search";
 
 interface TaskListProps {
   tasks: Task[];
@@ -12,13 +12,26 @@ interface TaskListProps {
   onEdit: (task: Task) => void;
   onDelete: (id: string) => void;
   onUpdateStatus: (id: string, status: Task['status']) => void;
+  searchQuery?: string;
+  onSearch?: (query: string) => void;
 }
 
-const TaskList = ({ tasks, employees, onEdit, onDelete, onUpdateStatus }: TaskListProps) => {
+const TaskList = ({ tasks, employees, onEdit, onDelete, onUpdateStatus, searchQuery = "", onSearch }: TaskListProps) => {
   const getEmployeeName = (employeeId: string) => {
     const employee = employees.find(emp => emp.id === employeeId);
     return employee ? employee.name : 'Unassigned';
   };
+
+  const filteredTasks = tasks.filter(task => {
+    const employeeName = getEmployeeName(task.assignedTo);
+    return (
+      task.title.toLowerCase().includes(searchQuery.toLowerCase()) ||
+      task.description.toLowerCase().includes(searchQuery.toLowerCase()) ||
+      task.status.toLowerCase().includes(searchQuery.toLowerCase()) ||
+      task.priority.toLowerCase().includes(searchQuery.toLowerCase()) ||
+      employeeName.toLowerCase().includes(searchQuery.toLowerCase())
+    );
+  });
 
   const getStatusColor = (status: Task['status']) => {
     switch (status) {
@@ -70,77 +83,95 @@ const TaskList = ({ tasks, employees, onEdit, onDelete, onUpdateStatus }: TaskLi
 
   return (
     <div className="space-y-4">
-      {tasks.map((task) => (
-        <Card key={task.id} className="hover:shadow-md transition-shadow border-0 shadow-sm">
-          <CardContent className="p-6">
-            <div className="flex items-start justify-between mb-4">
-              <div className="flex-1">
-                <div className="flex items-center gap-3 mb-2">
-                  <h3 className="font-semibold text-slate-900 text-lg">{task.title}</h3>
-                  {isOverdue(task.dueDate, task.status) && (
-                    <Badge variant="destructive" className="text-xs">
-                      Overdue
-                    </Badge>
-                  )}
+      {onSearch && (
+        <Search
+          placeholder="Search tasks by title, description, status, priority, or assignee..."
+          onSearch={onSearch}
+          className="mb-6"
+        />
+      )}
+
+      {filteredTasks.length === 0 && searchQuery ? (
+        <div className="text-center py-12">
+          <AlertCircle className="h-12 w-12 text-slate-400 mx-auto mb-4" />
+          <h3 className="text-lg font-medium text-slate-900 mb-2">No tasks found</h3>
+          <p className="text-slate-600">Try adjusting your search criteria.</p>
+        </div>
+      ) : (
+        <div className="space-y-4">
+          {filteredTasks.map((task) => (
+            <Card key={task.id} className="hover:shadow-md transition-shadow border-0 shadow-sm">
+              <CardContent className="p-6">
+                <div className="flex items-start justify-between mb-4">
+                  <div className="flex-1">
+                    <div className="flex items-center gap-3 mb-2">
+                      <h3 className="font-semibold text-slate-900 text-lg">{task.title}</h3>
+                      {isOverdue(task.dueDate, task.status) && (
+                        <Badge variant="destructive" className="text-xs">
+                          Overdue
+                        </Badge>
+                      )}
+                    </div>
+                    <p className="text-slate-600 mb-3">{task.description}</p>
+                    
+                    <div className="flex flex-wrap items-center gap-4 text-sm">
+                      <div className="flex items-center text-slate-600">
+                        <User className="h-4 w-4 mr-1" />
+                        {getEmployeeName(task.assignedTo)}
+                      </div>
+                      <div className="flex items-center text-slate-600">
+                        <Calendar className="h-4 w-4 mr-1" />
+                        Due: {formatDate(task.dueDate)}
+                      </div>
+                    </div>
+                  </div>
+                  
+                  <div className="flex items-center space-x-2 ml-4">
+                    <Button
+                      variant="ghost"
+                      size="sm"
+                      onClick={() => onEdit(task)}
+                      className="h-8 w-8 p-0 text-slate-600 hover:text-blue-600"
+                    >
+                      <Edit className="h-4 w-4" />
+                    </Button>
+                    <Button
+                      variant="ghost"
+                      size="sm"
+                      onClick={() => onDelete(task.id)}
+                      className="h-8 w-8 p-0 text-slate-600 hover:text-red-600"
+                    >
+                      <Trash2 className="h-4 w-4" />
+                    </Button>
+                  </div>
                 </div>
-                <p className="text-slate-600 mb-3">{task.description}</p>
                 
-                <div className="flex flex-wrap items-center gap-4 text-sm">
-                  <div className="flex items-center text-slate-600">
-                    <User className="h-4 w-4 mr-1" />
-                    {getEmployeeName(task.assignedTo)}
+                <div className="flex items-center justify-between">
+                  <div className="flex items-center gap-2">
+                    <Badge className={getPriorityColor(task.priority)}>
+                      {task.priority} priority
+                    </Badge>
+                    <Badge className={getStatusColor(task.status)}>
+                      {task.status.replace('-', ' ')}
+                    </Badge>
                   </div>
-                  <div className="flex items-center text-slate-600">
-                    <Calendar className="h-4 w-4 mr-1" />
-                    Due: {formatDate(task.dueDate)}
-                  </div>
+                  
+                  <Select value={task.status} onValueChange={(value: Task['status']) => onUpdateStatus(task.id, value)}>
+                    <SelectTrigger className="w-40">
+                      <SelectValue />
+                    </SelectTrigger>
+                    <SelectContent>
+                      <SelectItem value="pending">Pending</SelectItem>
+                      <SelectItem value="in-progress">In Progress</SelectItem>
+                      <SelectItem value="completed">Completed</SelectItem>
+                    </SelectContent>
+                  </Select>
                 </div>
-              </div>
-              
-              <div className="flex items-center space-x-2 ml-4">
-                <Button
-                  variant="ghost"
-                  size="sm"
-                  onClick={() => onEdit(task)}
-                  className="h-8 w-8 p-0 text-slate-600 hover:text-blue-600"
-                >
-                  <Edit className="h-4 w-4" />
-                </Button>
-                <Button
-                  variant="ghost"
-                  size="sm"
-                  onClick={() => onDelete(task.id)}
-                  className="h-8 w-8 p-0 text-slate-600 hover:text-red-600"
-                >
-                  <Trash2 className="h-4 w-4" />
-                </Button>
-              </div>
-            </div>
-            
-            <div className="flex items-center justify-between">
-              <div className="flex items-center gap-2">
-                <Badge className={getPriorityColor(task.priority)}>
-                  {task.priority} priority
-                </Badge>
-                <Badge className={getStatusColor(task.status)}>
-                  {task.status.replace('-', ' ')}
-                </Badge>
-              </div>
-              
-              <Select value={task.status} onValueChange={(value: Task['status']) => onUpdateStatus(task.id, value)}>
-                <SelectTrigger className="w-40">
-                  <SelectValue />
-                </SelectTrigger>
-                <SelectContent>
-                  <SelectItem value="pending">Pending</SelectItem>
-                  <SelectItem value="in-progress">In Progress</SelectItem>
-                  <SelectItem value="completed">Completed</SelectItem>
-                </SelectContent>
-              </Select>
-            </div>
-          </CardContent>
-        </Card>
-      ))}
+              </CardContent>
+            </Card>
+          ))}
+        </div>
+      )}
     </div>
   );
 };

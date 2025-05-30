@@ -1,4 +1,3 @@
-
 import { useState } from "react";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
@@ -93,6 +92,8 @@ const Index = () => {
   const [showTaskForm, setShowTaskForm] = useState(false);
   const [editingEmployee, setEditingEmployee] = useState<Employee | null>(null);
   const [editingTask, setEditingTask] = useState<Task | null>(null);
+  const [employeeSearchQuery, setEmployeeSearchQuery] = useState("");
+  const [taskSearchQuery, setTaskSearchQuery] = useState("");
 
   const handleAddEmployee = (employee: Omit<Employee, 'id'>) => {
     const newEmployee: Employee = {
@@ -318,6 +319,8 @@ const Index = () => {
                   employees={employees}
                   onEdit={handleEditEmployee}
                   onDelete={handleDeleteEmployee}
+                  searchQuery={employeeSearchQuery}
+                  onSearch={setEmployeeSearchQuery}
                 />
               </CardContent>
             </Card>
@@ -352,6 +355,8 @@ const Index = () => {
                   onEdit={handleEditTask}
                   onDelete={handleDeleteTask}
                   onUpdateStatus={handleUpdateTaskStatus}
+                  searchQuery={taskSearchQuery}
+                  onSearch={setTaskSearchQuery}
                 />
               </CardContent>
             </Card>
