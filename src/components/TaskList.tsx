@@ -1,3 +1,4 @@
+
 import { Button } from "@/components/ui/button";
 import { Card, CardContent } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
@@ -14,9 +15,25 @@ interface TaskListProps {
   onUpdateStatus: (id: string, status: Task['status']) => void;
   searchQuery?: string;
   onSearch?: (query: string) => void;
+  priorityFilter?: string;
+  onPriorityFilter?: (priority: string) => void;
+  statusFilter?: string;
+  onStatusFilter?: (status: string) => void;
 }
 
-const TaskList = ({ tasks, employees, onEdit, onDelete, onUpdateStatus, searchQuery = "", onSearch }: TaskListProps) => {
+const TaskList = ({ 
+  tasks, 
+  employees, 
+  onEdit, 
+  onDelete, 
+  onUpdateStatus, 
+  searchQuery = "", 
+  onSearch,
+  priorityFilter = "",
+  onPriorityFilter,
+  statusFilter = "",
+  onStatusFilter
+}: TaskListProps) => {
   const getEmployeeName = (employeeId: string) => {
     const employee = employees.find(emp => emp.id === employeeId);
     return employee ? employee.name : 'Unassigned';
@@ -24,13 +41,16 @@ const TaskList = ({ tasks, employees, onEdit, onDelete, onUpdateStatus, searchQu
 
   const filteredTasks = tasks.filter(task => {
     const employeeName = getEmployeeName(task.assignedTo);
-    return (
-      task.title.toLowerCase().includes(searchQuery.toLowerCase()) ||
+    const matchesSearch = task.title.toLowerCase().includes(searchQuery.toLowerCase()) ||
       task.description.toLowerCase().includes(searchQuery.toLowerCase()) ||
       task.status.toLowerCase().includes(searchQuery.toLowerCase()) ||
       task.priority.toLowerCase().includes(searchQuery.toLowerCase()) ||
-      employeeName.toLowerCase().includes(searchQuery.toLowerCase())
-    );
+      employeeName.toLowerCase().includes(searchQuery.toLowerCase());
+    
+    const matchesPriority = !priorityFilter || task.priority === priorityFilter;
+    const matchesStatus = !statusFilter || task.status === statusFilter;
+    
+    return matchesSearch && matchesPriority && matchesStatus;
   });
 
   const getStatusColor = (status: Task['status']) => {
@@ -83,19 +103,52 @@ const TaskList = ({ tasks, employees, onEdit, onDelete, onUpdateStatus, searchQu
 
   return (
     <div className="space-y-4">
-      {onSearch && (
-        <Search
-          placeholder="Search tasks by title, description, status, priority, or assignee..."
-          onSearch={onSearch}
-          className="mb-6"
-        />
-      )}
+      <div className="flex flex-col lg:flex-row gap-4 mb-6">
+        {onSearch && (
+          <div className="flex-1">
+            <Search
+              placeholder="Search tasks by title, description, status, priority, or assignee..."
+              onSearch={onSearch}
+            />
+          </div>
+        )}
+        
+        <div className="flex flex-col sm:flex-row gap-4">
+          {onPriorityFilter && (
+            <Select value={priorityFilter} onValueChange={onPriorityFilter}>
+              <SelectTrigger className="w-full sm:w-40">
+                <SelectValue placeholder="Priority" />
+              </SelectTrigger>
+              <SelectContent>
+                <SelectItem value="">All priorities</SelectItem>
+                <SelectItem value="high">High</SelectItem>
+                <SelectItem value="medium">Medium</SelectItem>
+                <SelectItem value="low">Low</SelectItem>
+              </SelectContent>
+            </Select>
+          )}
+          
+          {onStatusFilter && (
+            <Select value={statusFilter} onValueChange={onStatusFilter}>
+              <SelectTrigger className="w-full sm:w-40">
+                <SelectValue placeholder="Status" />
+              </SelectTrigger>
+              <SelectContent>
+                <SelectItem value="">All statuses</SelectItem>
+                <SelectItem value="pending">Pending</SelectItem>
+                <SelectItem value="in-progress">In Progress</SelectItem>
+                <SelectItem value="completed">Completed</SelectItem>
+              </SelectContent>
+            </Select>
+          )}
+        </div>
+      </div>
 
-      {filteredTasks.length === 0 && searchQuery ? (
+      {filteredTasks.length === 0 && (searchQuery || priorityFilter || statusFilter) ? (
         <div className="text-center py-12">
           <AlertCircle className="h-12 w-12 text-slate-400 mx-auto mb-4" />
           <h3 className="text-lg font-medium text-slate-900 mb-2">No tasks found</h3>
-          <p className="text-slate-600">Try adjusting your search criteria.</p>
+          <p className="text-slate-600">Try adjusting your search or filter criteria.</p>
         </div>
       ) : (
         <div className="space-y-4">

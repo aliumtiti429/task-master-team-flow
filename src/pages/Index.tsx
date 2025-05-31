@@ -94,6 +94,9 @@ const Index = () => {
   const [editingTask, setEditingTask] = useState<Task | null>(null);
   const [employeeSearchQuery, setEmployeeSearchQuery] = useState("");
   const [taskSearchQuery, setTaskSearchQuery] = useState("");
+  const [employeePositionFilter, setEmployeePositionFilter] = useState("");
+  const [taskPriorityFilter, setTaskPriorityFilter] = useState("");
+  const [taskStatusFilter, setTaskStatusFilter] = useState("");
 
   const handleAddEmployee = (employee: Omit<Employee, 'id'>) => {
     const newEmployee: Employee = {
@@ -321,6 +324,8 @@ const Index = () => {
                   onDelete={handleDeleteEmployee}
                   searchQuery={employeeSearchQuery}
                   onSearch={setEmployeeSearchQuery}
+                  positionFilter={employeePositionFilter}
+                  onPositionFilter={setEmployeePositionFilter}
                 />
               </CardContent>
             </Card>
@@ -357,6 +362,10 @@ const Index = () => {
                   onUpdateStatus={handleUpdateTaskStatus}
                   searchQuery={taskSearchQuery}
                   onSearch={setTaskSearchQuery}
+                  priorityFilter={taskPriorityFilter}
+                  onPriorityFilter={setTaskPriorityFilter}
+                  statusFilter={taskStatusFilter}
+                  onStatusFilter={setTaskStatusFilter}
                 />
               </CardContent>
             </Card>

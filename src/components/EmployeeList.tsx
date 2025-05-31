@@ -2,6 +2,7 @@
 import { Button } from "@/components/ui/button";
 import { Card, CardContent } from "@/components/ui/card";
 import { Avatar, AvatarFallback } from "@/components/ui/avatar";
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Edit, Trash2, Mail, Building, User } from "lucide-react";
 import { Employee } from "@/pages/Index";
 import Search from "./Search";
@@ -12,15 +13,33 @@ interface EmployeeListProps {
   onDelete: (id: string) => void;
   searchQuery?: string;
   onSearch?: (query: string) => void;
+  positionFilter?: string;
+  onPositionFilter?: (position: string) => void;
 }
 
-const EmployeeList = ({ employees, onEdit, onDelete, searchQuery = "", onSearch }: EmployeeListProps) => {
-  const filteredEmployees = employees.filter(employee =>
-    employee.name.toLowerCase().includes(searchQuery.toLowerCase()) ||
-    employee.email.toLowerCase().includes(searchQuery.toLowerCase()) ||
-    employee.department.toLowerCase().includes(searchQuery.toLowerCase()) ||
-    employee.position.toLowerCase().includes(searchQuery.toLowerCase())
-  );
+const EmployeeList = ({ 
+  employees, 
+  onEdit, 
+  onDelete, 
+  searchQuery = "", 
+  onSearch,
+  positionFilter = "",
+  onPositionFilter
+}: EmployeeListProps) => {
+  
+  // Get unique positions for filter dropdown
+  const uniquePositions = Array.from(new Set(employees.map(emp => emp.position))).sort();
+
+  const filteredEmployees = employees.filter(employee => {
+    const matchesSearch = employee.name.toLowerCase().includes(searchQuery.toLowerCase()) ||
+      employee.email.toLowerCase().includes(searchQuery.toLowerCase()) ||
+      employee.department.toLowerCase().includes(searchQuery.toLowerCase()) ||
+      employee.position.toLowerCase().includes(searchQuery.toLowerCase());
+    
+    const matchesPosition = !positionFilter || employee.position === positionFilter;
+    
+    return matchesSearch && matchesPosition;
+  });
 
   if (employees.length === 0) {
     return (
@@ -34,19 +53,38 @@ const EmployeeList = ({ employees, onEdit, onDelete, searchQuery = "", onSearch 
 
   return (
     <div className="space-y-4">
-      {onSearch && (
-        <Search
-          placeholder="Search employees by name, email, department, or position..."
-          onSearch={onSearch}
-          className="mb-6"
-        />
-      )}
+      <div className="flex flex-col sm:flex-row gap-4 mb-6">
+        {onSearch && (
+          <div className="flex-1">
+            <Search
+              placeholder="Search employees by name, email, department, or position..."
+              onSearch={onSearch}
+            />
+          </div>
+        )}
+        
+        {onPositionFilter && (
+          <Select value={positionFilter} onValueChange={onPositionFilter}>
+            <SelectTrigger className="w-full sm:w-48">
+              <SelectValue placeholder="Filter by position" />
+            </SelectTrigger>
+            <SelectContent>
+              <SelectItem value="">All positions</SelectItem>
+              {uniquePositions.map((position) => (
+                <SelectItem key={position} value={position}>
+                  {position}
+                </SelectItem>
+              ))}
+            </SelectContent>
+          </Select>
+        )}
+      </div>
       
-      {filteredEmployees.length === 0 && searchQuery ? (
+      {filteredEmployees.length === 0 && (searchQuery || positionFilter) ? (
         <div className="text-center py-12">
           <User className="h-12 w-12 text-slate-400 mx-auto mb-4" />
           <h3 className="text-lg font-medium text-slate-900 mb-2">No employees found</h3>
-          <p className="text-slate-600">Try adjusting your search criteria.</p>
+          <p className="text-slate-600">Try adjusting your search or filter criteria.</p>
         </div>
       ) : (
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
