@@ -325,7 +325,7 @@ const Index = () => {
                   searchQuery={employeeSearchQuery}
                   onSearch={setEmployeeSearchQuery}
                   positionFilter={employeePositionFilter}
-                  onPositionFilter={setEmployeePositionFilter}
+                  onPositionFilter={(value) => setEmployeePositionFilter(value === "all" ? "" : value)}
                 />
               </CardContent>
             </Card>
@@ -363,9 +363,9 @@ const Index = () => {
                   searchQuery={taskSearchQuery}
                   onSearch={setTaskSearchQuery}
                   priorityFilter={taskPriorityFilter}
-                  onPriorityFilter={setTaskPriorityFilter}
+                  onPriorityFilter={(value) => setTaskPriorityFilter(value === "all" ? "" : value)}
                   statusFilter={taskStatusFilter}
-                  onStatusFilter={setTaskStatusFilter}
+                  onStatusFilter={(value) => setTaskStatusFilter(value === "all" ? "" : value)}
                 />
               </CardContent>
             </Card>

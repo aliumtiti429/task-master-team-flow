@@ -1,4 +1,3 @@
-
 import { Button } from "@/components/ui/button";
 import { Card, CardContent } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
@@ -47,8 +46,8 @@ const TaskList = ({
       task.priority.toLowerCase().includes(searchQuery.toLowerCase()) ||
       employeeName.toLowerCase().includes(searchQuery.toLowerCase());
     
-    const matchesPriority = !priorityFilter || task.priority === priorityFilter;
-    const matchesStatus = !statusFilter || task.status === statusFilter;
+    const matchesPriority = !priorityFilter || priorityFilter === "all" || task.priority === priorityFilter;
+    const matchesStatus = !statusFilter || statusFilter === "all" || task.status === statusFilter;
     
     return matchesSearch && matchesPriority && matchesStatus;
   });
@@ -120,7 +119,7 @@ const TaskList = ({
                 <SelectValue placeholder="Priority" />
               </SelectTrigger>
               <SelectContent>
-                <SelectItem value="">All priorities</SelectItem>
+                <SelectItem value="all">All priorities</SelectItem>
                 <SelectItem value="high">High</SelectItem>
                 <SelectItem value="medium">Medium</SelectItem>
                 <SelectItem value="low">Low</SelectItem>
@@ -134,7 +133,7 @@ const TaskList = ({
                 <SelectValue placeholder="Status" />
               </SelectTrigger>
               <SelectContent>
-                <SelectItem value="">All statuses</SelectItem>
+                <SelectItem value="all">All statuses</SelectItem>
                 <SelectItem value="pending">Pending</SelectItem>
                 <SelectItem value="in-progress">In Progress</SelectItem>
                 <SelectItem value="completed">Completed</SelectItem>

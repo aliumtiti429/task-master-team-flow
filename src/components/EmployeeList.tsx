@@ -1,4 +1,3 @@
-
 import { Button } from "@/components/ui/button";
 import { Card, CardContent } from "@/components/ui/card";
 import { Avatar, AvatarFallback } from "@/components/ui/avatar";
@@ -69,7 +68,7 @@ const EmployeeList = ({
               <SelectValue placeholder="Filter by position" />
             </SelectTrigger>
             <SelectContent>
-              <SelectItem value="">All positions</SelectItem>
+              <SelectItem value="all">All positions</SelectItem>
               {uniquePositions.map((position) => (
                 <SelectItem key={position} value={position}>
                   {position}
