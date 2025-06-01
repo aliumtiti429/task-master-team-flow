@@ -25,7 +25,11 @@ export const taskService = {
       throw error;
     }
     
-    return data || [];
+    return (data || []).map(task => ({
+      ...task,
+      status: task.status as Task['status'],
+      priority: task.priority as Task['priority']
+    }));
   },
 
   async create(task: Omit<Task, 'id' | 'created_at' | 'updated_at'>): Promise<Task> {
@@ -40,7 +44,11 @@ export const taskService = {
       throw error;
     }
     
-    return data;
+    return {
+      ...data,
+      status: data.status as Task['status'],
+      priority: data.priority as Task['priority']
+    };
   },
 
   async update(id: string, task: Omit<Task, 'id' | 'created_at' | 'updated_at'>): Promise<Task> {
@@ -56,7 +64,11 @@ export const taskService = {
       throw error;
     }
     
-    return data;
+    return {
+      ...data,
+      status: data.status as Task['status'],
+      priority: data.priority as Task['priority']
+    };
   },
 
   async delete(id: string): Promise<void> {
@@ -84,6 +96,10 @@ export const taskService = {
       throw error;
     }
     
-    return data;
+    return {
+      ...data,
+      status: data.status as Task['status'],
+      priority: data.priority as Task['priority']
+    };
   }
 };
