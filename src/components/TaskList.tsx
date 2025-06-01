@@ -3,7 +3,8 @@ import { Card, CardContent } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Edit, Trash2, Calendar, User, AlertCircle } from "lucide-react";
-import { Task, Employee } from "@/pages/Index";
+import { Task } from "@/services/taskService";
+import { Employee } from "@/services/employeeService";
 import Search from "./Search";
 
 interface TaskListProps {

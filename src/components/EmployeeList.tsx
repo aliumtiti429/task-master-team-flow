@@ -3,7 +3,7 @@ import { Card, CardContent } from "@/components/ui/card";
 import { Avatar, AvatarFallback } from "@/components/ui/avatar";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Edit, Trash2, Mail, Building, User } from "lucide-react";
-import { Employee } from "@/pages/Index";
+import { Employee } from "@/services/employeeService";
 import Search from "./Search";
 
 interface EmployeeListProps {

@@ -1,93 +1,34 @@
+
 import { useState } from "react";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Users, CheckSquare, Plus, BarChart3 } from "lucide-react";
+import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import EmployeeList from "@/components/EmployeeList";
 import TaskList from "@/components/TaskList";
 import EmployeeForm from "@/components/EmployeeForm";
 import TaskForm from "@/components/TaskForm";
 import { useToast } from "@/hooks/use-toast";
-
-export interface Employee {
-  id: string;
-  name: string;
-  email: string;
-  department: string;
-  position: string;
-  avatar?: string;
-}
-
-export interface Task {
-  id: string;
-  title: string;
-  description: string;
-  status: 'pending' | 'in-progress' | 'completed';
-  priority: 'low' | 'medium' | 'high';
-  assignedTo: string; // employee id
-  dueDate: string;
-  createdAt: string;
-}
+import { employeeService, Employee } from "@/services/employeeService";
+import { taskService, Task } from "@/services/taskService";
 
 const Index = () => {
   const { toast } = useToast();
-  const [employees, setEmployees] = useState<Employee[]>([
-    {
-      id: "1",
-      name: "John Smith",
-      email: "john.smith@company.com",
-      department: "Engineering",
-      position: "Senior Developer"
-    },
-    {
-      id: "2",
-      name: "Sarah Johnson",
-      email: "sarah.johnson@company.com",
-      department: "Design",
-      position: "UI/UX Designer"
-    },
-    {
-      id: "3",
-      name: "Mike Wilson",
-      email: "mike.wilson@company.com",
-      department: "Marketing",
-      position: "Marketing Manager"
-    }
-  ]);
+  const queryClient = useQueryClient();
 
-  const [tasks, setTasks] = useState<Task[]>([
-    {
-      id: "1",
-      title: "Implement User Authentication",
-      description: "Add login and registration functionality to the application",
-      status: "in-progress",
-      priority: "high",
-      assignedTo: "1",
-      dueDate: "2024-06-15",
-      createdAt: "2024-05-30"
-    },
-    {
-      id: "2",
-      title: "Design Landing Page",
-      description: "Create mockups and design for the new landing page",
-      status: "pending",
-      priority: "medium",
-      assignedTo: "2",
-      dueDate: "2024-06-10",
-      createdAt: "2024-05-30"
-    },
-    {
-      id: "3",
-      title: "Plan Marketing Campaign",
-      description: "Develop strategy for Q3 marketing campaign",
-      status: "completed",
-      priority: "high",
-      assignedTo: "3",
-      dueDate: "2024-06-01",
-      createdAt: "2024-05-25"
-    }
-  ]);
+  // Fetch employees and tasks
+  const { data: employees = [], isLoading: employeesLoading } = useQuery({
+    queryKey: ['employees'],
+    queryFn: employeeService.getAll,
+  });
 
+  const { data: tasks = [], isLoading: tasksLoading } = useQuery({
+    queryKey: ['tasks'],
+    queryFn: taskService.getAll,
+  });
+
+  // UI state
   const [showEmployeeForm, setShowEmployeeForm] = useState(false);
   const [showTaskForm, setShowTaskForm] = useState(false);
   const [editingEmployee, setEditingEmployee] = useState<Employee | null>(null);
@@ -98,17 +39,154 @@ const Index = () => {
   const [taskPriorityFilter, setTaskPriorityFilter] = useState("");
   const [taskStatusFilter, setTaskStatusFilter] = useState("");
 
+  // Employee mutations
+  const createEmployeeMutation = useMutation({
+    mutationFn: employeeService.create,
+    onSuccess: (data) => {
+      queryClient.invalidateQueries({ queryKey: ['employees'] });
+      setShowEmployeeForm(false);
+      toast({
+        title: "Employee Added",
+        description: `${data.name} has been added successfully.`,
+      });
+    },
+    onError: (error) => {
+      toast({
+        title: "Error",
+        description: "Failed to add employee. Please try again.",
+        variant: "destructive",
+      });
+      console.error('Error adding employee:', error);
+    },
+  });
+
+  const updateEmployeeMutation = useMutation({
+    mutationFn: ({ id, data }: { id: string; data: Omit<Employee, 'id' | 'created_at' | 'updated_at'> }) =>
+      employeeService.update(id, data),
+    onSuccess: (data) => {
+      queryClient.invalidateQueries({ queryKey: ['employees'] });
+      setEditingEmployee(null);
+      setShowEmployeeForm(false);
+      toast({
+        title: "Employee Updated",
+        description: `${data.name} has been updated successfully.`,
+      });
+    },
+    onError: (error) => {
+      toast({
+        title: "Error",
+        description: "Failed to update employee. Please try again.",
+        variant: "destructive",
+      });
+      console.error('Error updating employee:', error);
+    },
+  });
+
+  const deleteEmployeeMutation = useMutation({
+    mutationFn: employeeService.delete,
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ['employees'] });
+      queryClient.invalidateQueries({ queryKey: ['tasks'] });
+      toast({
+        title: "Employee Deleted",
+        description: "Employee has been removed.",
+      });
+    },
+    onError: (error) => {
+      toast({
+        title: "Error",
+        description: "Failed to delete employee. Please try again.",
+        variant: "destructive",
+      });
+      console.error('Error deleting employee:', error);
+    },
+  });
+
+  // Task mutations
+  const createTaskMutation = useMutation({
+    mutationFn: taskService.create,
+    onSuccess: (data) => {
+      queryClient.invalidateQueries({ queryKey: ['tasks'] });
+      setShowTaskForm(false);
+      toast({
+        title: "Task Created",
+        description: `"${data.title}" has been created successfully.`,
+      });
+    },
+    onError: (error) => {
+      toast({
+        title: "Error",
+        description: "Failed to create task. Please try again.",
+        variant: "destructive",
+      });
+      console.error('Error creating task:', error);
+    },
+  });
+
+  const updateTaskMutation = useMutation({
+    mutationFn: ({ id, data }: { id: string; data: Omit<Task, 'id' | 'created_at' | 'updated_at'> }) =>
+      taskService.update(id, data),
+    onSuccess: (data) => {
+      queryClient.invalidateQueries({ queryKey: ['tasks'] });
+      setEditingTask(null);
+      setShowTaskForm(false);
+      toast({
+        title: "Task Updated",
+        description: `"${data.title}" has been updated successfully.`,
+      });
+    },
+    onError: (error) => {
+      toast({
+        title: "Error",
+        description: "Failed to update task. Please try again.",
+        variant: "destructive",
+      });
+      console.error('Error updating task:', error);
+    },
+  });
+
+  const deleteTaskMutation = useMutation({
+    mutationFn: taskService.delete,
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ['tasks'] });
+      toast({
+        title: "Task Deleted",
+        description: "Task has been deleted.",
+      });
+    },
+    onError: (error) => {
+      toast({
+        title: "Error",
+        description: "Failed to delete task. Please try again.",
+        variant: "destructive",
+      });
+      console.error('Error deleting task:', error);
+    },
+  });
+
+  const updateTaskStatusMutation = useMutation({
+    mutationFn: ({ id, status }: { id: string; status: Task['status'] }) =>
+      taskService.updateStatus(id, status),
+    onSuccess: (data) => {
+      queryClient.invalidateQueries({ queryKey: ['tasks'] });
+      toast({
+        title: "Task Status Updated",
+        description: `"${data.title}" is now ${data.status}.`,
+      });
+    },
+    onError: (error) => {
+      toast({
+        title: "Error",
+        description: "Failed to update task status. Please try again.",
+        variant: "destructive",
+      });
+      console.error('Error updating task status:', error);
+    },
+  });
+
+  // Event handlers
   const handleAddEmployee = (employee: Omit<Employee, 'id'>) => {
-    const newEmployee: Employee = {
-      ...employee,
-      id: Date.now().toString()
-    };
-    setEmployees([...employees, newEmployee]);
-    setShowEmployeeForm(false);
-    toast({
-      title: "Employee Added",
-      description: `${employee.name} has been added successfully.`,
-    });
+    createEmployeeMutation.mutate(employee);
   };
 
   const handleEditEmployee = (employee: Employee) => {
@@ -118,43 +196,19 @@ const Index = () => {
 
   const handleUpdateEmployee = (updatedEmployee: Omit<Employee, 'id'>) => {
     if (editingEmployee) {
-      setEmployees(employees.map(emp => 
-        emp.id === editingEmployee.id 
-          ? { ...updatedEmployee, id: editingEmployee.id }
-          : emp
-      ));
-      setEditingEmployee(null);
-      setShowEmployeeForm(false);
-      toast({
-        title: "Employee Updated",
-        description: `${updatedEmployee.name} has been updated successfully.`,
+      updateEmployeeMutation.mutate({
+        id: editingEmployee.id,
+        data: updatedEmployee,
       });
     }
   };
 
   const handleDeleteEmployee = (id: string) => {
-    const employee = employees.find(emp => emp.id === id);
-    setEmployees(employees.filter(emp => emp.id !== id));
-    // Also remove tasks assigned to this employee
-    setTasks(tasks.filter(task => task.assignedTo !== id));
-    toast({
-      title: "Employee Deleted",
-      description: `${employee?.name} has been removed.`,
-    });
+    deleteEmployeeMutation.mutate(id);
   };
 
   const handleAddTask = (task: Omit<Task, 'id' | 'createdAt'>) => {
-    const newTask: Task = {
-      ...task,
-      id: Date.now().toString(),
-      createdAt: new Date().toISOString().split('T')[0]
-    };
-    setTasks([...tasks, newTask]);
-    setShowTaskForm(false);
-    toast({
-      title: "Task Created",
-      description: `"${task.title}" has been created successfully.`,
-    });
+    createTaskMutation.mutate(task);
   };
 
   const handleEditTask = (task: Task) => {
@@ -164,38 +218,19 @@ const Index = () => {
 
   const handleUpdateTask = (updatedTask: Omit<Task, 'id' | 'createdAt'>) => {
     if (editingTask) {
-      setTasks(tasks.map(task => 
-        task.id === editingTask.id 
-          ? { ...updatedTask, id: editingTask.id, createdAt: editingTask.createdAt }
-          : task
-      ));
-      setEditingTask(null);
-      setShowTaskForm(false);
-      toast({
-        title: "Task Updated",
-        description: `"${updatedTask.title}" has been updated successfully.`,
+      updateTaskMutation.mutate({
+        id: editingTask.id,
+        data: updatedTask,
       });
     }
   };
 
   const handleDeleteTask = (id: string) => {
-    const task = tasks.find(t => t.id === id);
-    setTasks(tasks.filter(t => t.id !== id));
-    toast({
-      title: "Task Deleted",
-      description: `"${task?.title}" has been deleted.`,
-    });
+    deleteTaskMutation.mutate(id);
   };
 
   const handleUpdateTaskStatus = (id: string, status: Task['status']) => {
-    setTasks(tasks.map(task => 
-      task.id === id ? { ...task, status } : task
-    ));
-    const task = tasks.find(t => t.id === id);
-    toast({
-      title: "Task Status Updated",
-      description: `"${task?.title}" is now ${status}.`,
-    });
+    updateTaskStatusMutation.mutate({ id, status });
   };
 
   const getStats = () => {
@@ -215,6 +250,17 @@ const Index = () => {
   };
 
   const stats = getStats();
+
+  if (employeesLoading || tasksLoading) {
+    return (
+      <div className="min-h-screen bg-gradient-to-br from-slate-50 to-blue-50 flex items-center justify-center">
+        <div className="text-center">
+          <div className="animate-spin rounded-full h-32 w-32 border-b-2 border-blue-600 mx-auto"></div>
+          <p className="mt-4 text-slate-600">Loading your data...</p>
+        </div>
+      </div>
+    );
+  }
 
   return (
     <div className="min-h-screen bg-gradient-to-br from-slate-50 to-blue-50">
