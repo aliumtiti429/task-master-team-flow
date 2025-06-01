@@ -1,3 +1,4 @@
+
 import { useState } from "react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -12,7 +13,7 @@ import { Employee } from "@/services/employeeService";
 interface TaskFormProps {
   task?: Task | null;
   employees: Employee[];
-  onSubmit: (task: Omit<Task, 'id' | 'createdAt'>) => void;
+  onSubmit: (task: Omit<Task, 'id' | 'created_at' | 'updated_at'>) => void;
   onCancel: () => void;
 }
 
@@ -22,8 +23,8 @@ const TaskForm = ({ task, employees, onSubmit, onCancel }: TaskFormProps) => {
     description: task?.description || '',
     status: task?.status || 'pending' as Task['status'],
     priority: task?.priority || 'medium' as Task['priority'],
-    assignedTo: task?.assignedTo || '',
-    dueDate: task?.dueDate || ''
+    assigned_to: task?.assigned_to || '',
+    due_date: task?.due_date || ''
   });
 
   const [errors, setErrors] = useState<Record<string, string>>({});
@@ -39,12 +40,12 @@ const TaskForm = ({ task, employees, onSubmit, onCancel }: TaskFormProps) => {
       newErrors.description = 'Description is required';
     }
 
-    if (!formData.assignedTo) {
-      newErrors.assignedTo = 'Please assign this task to an employee';
+    if (!formData.assigned_to) {
+      newErrors.assigned_to = 'Please assign this task to an employee';
     }
 
-    if (!formData.dueDate) {
-      newErrors.dueDate = 'Due date is required';
+    if (!formData.due_date) {
+      newErrors.due_date = 'Due date is required';
     }
 
     setErrors(newErrors);
@@ -139,9 +140,9 @@ const TaskForm = ({ task, employees, onSubmit, onCancel }: TaskFormProps) => {
             </div>
 
             <div className="space-y-2">
-              <Label htmlFor="assignedTo">Assign To</Label>
-              <Select value={formData.assignedTo} onValueChange={(value) => handleChange('assignedTo', value)}>
-                <SelectTrigger className={errors.assignedTo ? 'border-red-500' : ''}>
+              <Label htmlFor="assigned_to">Assign To</Label>
+              <Select value={formData.assigned_to} onValueChange={(value) => handleChange('assigned_to', value)}>
+                <SelectTrigger className={errors.assigned_to ? 'border-red-500' : ''}>
                   <SelectValue placeholder="Select employee" />
                 </SelectTrigger>
                 <SelectContent>
@@ -152,19 +153,19 @@ const TaskForm = ({ task, employees, onSubmit, onCancel }: TaskFormProps) => {
                   ))}
                 </SelectContent>
               </Select>
-              {errors.assignedTo && <p className="text-sm text-red-500">{errors.assignedTo}</p>}
+              {errors.assigned_to && <p className="text-sm text-red-500">{errors.assigned_to}</p>}
             </div>
 
             <div className="space-y-2">
-              <Label htmlFor="dueDate">Due Date</Label>
+              <Label htmlFor="due_date">Due Date</Label>
               <Input
-                id="dueDate"
+                id="due_date"
                 type="date"
-                value={formData.dueDate}
-                onChange={(e) => handleChange('dueDate', e.target.value)}
-                className={errors.dueDate ? 'border-red-500' : ''}
+                value={formData.due_date}
+                onChange={(e) => handleChange('due_date', e.target.value)}
+                className={errors.due_date ? 'border-red-500' : ''}
               />
-              {errors.dueDate && <p className="text-sm text-red-500">{errors.dueDate}</p>}
+              {errors.due_date && <p className="text-sm text-red-500">{errors.due_date}</p>}
             </div>
 
             <div className="flex space-x-3 pt-4">

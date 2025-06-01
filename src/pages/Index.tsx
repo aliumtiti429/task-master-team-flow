@@ -1,4 +1,3 @@
-
 import { useState } from "react";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
@@ -207,7 +206,7 @@ const Index = () => {
     deleteEmployeeMutation.mutate(id);
   };
 
-  const handleAddTask = (task: Omit<Task, 'id' | 'createdAt'>) => {
+  const handleAddTask = (task: Omit<Task, 'id' | 'created_at' | 'updated_at'>) => {
     createTaskMutation.mutate(task);
   };
 
@@ -216,7 +215,7 @@ const Index = () => {
     setShowTaskForm(true);
   };
 
-  const handleUpdateTask = (updatedTask: Omit<Task, 'id' | 'createdAt'>) => {
+  const handleUpdateTask = (updatedTask: Omit<Task, 'id' | 'created_at' | 'updated_at'>) => {
     if (editingTask) {
       updateTaskMutation.mutate({
         id: editingTask.id,
@@ -233,6 +232,7 @@ const Index = () => {
     updateTaskStatusMutation.mutate({ id, status });
   };
 
+  // Get stats
   const getStats = () => {
     const totalTasks = tasks.length;
     const completedTasks = tasks.filter(t => t.status === 'completed').length;

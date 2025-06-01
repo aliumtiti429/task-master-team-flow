@@ -40,7 +40,7 @@ const TaskList = ({
   };
 
   const filteredTasks = tasks.filter(task => {
-    const employeeName = getEmployeeName(task.assignedTo);
+    const employeeName = getEmployeeName(task.assigned_to);
     const matchesSearch = task.title.toLowerCase().includes(searchQuery.toLowerCase()) ||
       task.description.toLowerCase().includes(searchQuery.toLowerCase()) ||
       task.status.toLowerCase().includes(searchQuery.toLowerCase()) ||
@@ -159,7 +159,7 @@ const TaskList = ({
                   <div className="flex-1">
                     <div className="flex items-center gap-3 mb-2">
                       <h3 className="font-semibold text-slate-900 text-lg">{task.title}</h3>
-                      {isOverdue(task.dueDate, task.status) && (
+                      {isOverdue(task.due_date, task.status) && (
                         <Badge variant="destructive" className="text-xs">
                           Overdue
                         </Badge>
@@ -170,11 +170,11 @@ const TaskList = ({
                     <div className="flex flex-wrap items-center gap-4 text-sm">
                       <div className="flex items-center text-slate-600">
                         <User className="h-4 w-4 mr-1" />
-                        {getEmployeeName(task.assignedTo)}
+                        {getEmployeeName(task.assigned_to)}
                       </div>
                       <div className="flex items-center text-slate-600">
                         <Calendar className="h-4 w-4 mr-1" />
-                        Due: {formatDate(task.dueDate)}
+                        Due: {formatDate(task.due_date)}
                       </div>
                     </div>
                   </div>
