@@ -8,11 +8,11 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { X } from "lucide-react";
 import { Task } from "@/services/taskService";
-import { Employee } from "@/services/employeeService";
+import { UserProfile } from "@/services/authService";
 
 interface TaskFormProps {
   task?: Task | null;
-  employees: Employee[];
+  employees: UserProfile[];
   onSubmit: (task: Omit<Task, 'id' | 'created_at' | 'updated_at'>) => void;
   onCancel: () => void;
 }
@@ -41,7 +41,7 @@ const TaskForm = ({ task, employees, onSubmit, onCancel }: TaskFormProps) => {
     }
 
     if (!formData.assigned_to) {
-      newErrors.assigned_to = 'Please assign this task to an employee';
+      newErrors.assigned_to = 'Please assign this task to a user';
     }
 
     if (!formData.due_date) {
@@ -143,12 +143,12 @@ const TaskForm = ({ task, employees, onSubmit, onCancel }: TaskFormProps) => {
               <Label htmlFor="assigned_to">Assign To</Label>
               <Select value={formData.assigned_to} onValueChange={(value) => handleChange('assigned_to', value)}>
                 <SelectTrigger className={errors.assigned_to ? 'border-red-500' : ''}>
-                  <SelectValue placeholder="Select employee" />
+                  <SelectValue placeholder="Select user" />
                 </SelectTrigger>
                 <SelectContent>
                   {employees.map((employee) => (
                     <SelectItem key={employee.id} value={employee.id}>
-                      {employee.name} - {employee.position}
+                      {employee.name} ({employee.role})
                     </SelectItem>
                   ))}
                 </SelectContent>
