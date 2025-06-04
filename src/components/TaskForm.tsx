@@ -12,12 +12,12 @@ import { UserProfile } from "@/services/authService";
 
 interface TaskFormProps {
   task?: Task | null;
-  employees: UserProfile[];
+  profiles: UserProfile[];
   onSubmit: (task: Omit<Task, 'id' | 'created_at' | 'updated_at'>) => void;
   onCancel: () => void;
 }
 
-const TaskForm = ({ task, employees, onSubmit, onCancel }: TaskFormProps) => {
+const TaskForm = ({ task, profiles, onSubmit, onCancel }: TaskFormProps) => {
   const [formData, setFormData] = useState({
     title: task?.title || '',
     description: task?.description || '',
@@ -146,9 +146,9 @@ const TaskForm = ({ task, employees, onSubmit, onCancel }: TaskFormProps) => {
                   <SelectValue placeholder="Select user" />
                 </SelectTrigger>
                 <SelectContent>
-                  {employees.map((employee) => (
-                    <SelectItem key={employee.id} value={employee.id}>
-                      {employee.name} ({employee.role})
+                  {profiles.map((profile) => (
+                    <SelectItem key={profile.id} value={profile.id}>
+                      {profile.name} ({profile.role})
                     </SelectItem>
                   ))}
                 </SelectContent>
