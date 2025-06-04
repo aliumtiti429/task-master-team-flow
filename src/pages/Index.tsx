@@ -15,6 +15,7 @@ import { useToast } from "@/hooks/use-toast";
 import { useAuth } from "@/contexts/AuthContext";
 import { employeeService, Employee } from "@/services/employeeService";
 import { taskService, Task } from "@/services/taskService";
+import { authService } from "@/services/authService";
 
 const Index = () => {
   const { toast } = useToast();
@@ -29,17 +30,23 @@ const Index = () => {
     }
   }, [user, loading, navigate]);
 
-  // Fetch employees and tasks
+  // Fetch employees, tasks, and profiles
   const { data: employees = [], isLoading: employeesLoading } = useQuery({
     queryKey: ['employees'],
     queryFn: employeeService.getAll,
-    enabled: !!user,
+    enabled: !!user && isAdmin(),
   });
 
   const { data: tasks = [], isLoading: tasksLoading } = useQuery({
     queryKey: ['tasks'],
     queryFn: taskService.getAll,
     enabled: !!user,
+  });
+
+  const { data: profiles = [], isLoading: profilesLoading } = useQuery({
+    queryKey: ['profiles'],
+    queryFn: authService.getAllProfiles,
+    enabled: !!user && isAdmin(),
   });
 
   // UI state
@@ -278,7 +285,7 @@ const Index = () => {
     };
   };
 
-  if (loading || employeesLoading || tasksLoading) {
+  if (loading || employeesLoading || tasksLoading || profilesLoading) {
     return (
       <div className="min-h-screen bg-gradient-to-br from-slate-50 to-blue-50 flex items-center justify-center">
         <div className="text-center">
@@ -508,7 +515,7 @@ const Index = () => {
         {showTaskForm && isAdmin() && (
           <TaskForm
             task={editingTask}
-            employees={employees}
+            profiles={profiles}
             onSubmit={editingTask ? handleUpdateTask : handleAddTask}
             onCancel={() => {
               setShowTaskForm(false);
