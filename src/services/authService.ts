@@ -11,27 +11,6 @@ export interface UserProfile {
 }
 
 export const authService = {
-  async signUp(email: string, password: string, name: string, role: 'admin' | 'user' = 'user') {
-    const { data, error } = await supabase.auth.signUp({
-      email,
-      password,
-      options: {
-        data: {
-          name,
-          role
-        },
-        emailRedirectTo: `${window.location.origin}/`
-      }
-    });
-    
-    if (error) {
-      console.error('Error signing up:', error);
-      throw error;
-    }
-    
-    return data;
-  },
-
   async signIn(email: string, password: string) {
     const { data, error } = await supabase.auth.signInWithPassword({
       email,
@@ -94,10 +73,13 @@ export const authService = {
     return data || [];
   },
 
-  async createUserProfile(email: string, name: string, role: 'admin' | 'user' = 'user') {
+  async createUserProfile(email: string, name: string, role: 'admin' | 'user' = 'user', password?: string) {
+    // Generate a secure temporary password if none provided
+    const tempPassword = password || Math.random().toString(36).slice(-8) + Math.random().toString(36).slice(-8).toUpperCase() + '123!';
+    
     const { data, error } = await supabase.auth.admin.createUser({
       email,
-      password: Math.random().toString(36).slice(-8), // Temporary password
+      password: tempPassword,
       email_confirm: true,
       user_metadata: {
         name,
@@ -110,6 +92,6 @@ export const authService = {
       throw error;
     }
     
-    return data;
+    return { ...data, tempPassword };
   }
 };
