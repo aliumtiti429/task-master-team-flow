@@ -11,7 +11,25 @@ export interface UserProfile {
 }
 
 export const authService = {
-  async signIn(email: string, password: string) {
+  async signIn(emailOrName: string, password: string) {
+    let email = emailOrName;
+    
+    // Check if the input looks like a name (doesn't contain @)
+    if (!emailOrName.includes('@')) {
+      // Look up email by name in profiles table
+      const { data: profile } = await supabase
+        .from('profiles')
+        .select('email')
+        .eq('name', emailOrName)
+        .single();
+      
+      if (!profile) {
+        throw new Error('User not found with that name');
+      }
+      
+      email = profile.email;
+    }
+    
     const { data, error } = await supabase.auth.signInWithPassword({
       email,
       password
@@ -74,42 +92,42 @@ export const authService = {
   },
 
   async createUserProfile(email: string, name: string, role: 'admin' | 'user' = 'user', password?: string) {
-    // Create user directly in profiles table since we can't use admin API
     const tempPassword = password || Math.random().toString(36).slice(-8) + Math.random().toString(36).slice(-8).toUpperCase() + '123!';
     
-    // First create the auth user with admin privileges
-    const { data: adminData, error: adminError } = await supabase.auth.admin.createUser({
+    // Use regular signUp to create auth user and profile
+    const { data, error } = await supabase.auth.signUp({
       email,
       password: tempPassword,
-      email_confirm: true,
-      user_metadata: {
-        name,
-        role
+      options: {
+        data: {
+          name,
+          role
+        }
       }
     });
     
-    if (adminError) {
-      // If admin API fails, try direct database insert (fallback)
-      const userId = crypto.randomUUID();
-      const { data, error } = await supabase
+    if (error) {
+      console.error('Error creating user:', error);
+      throw error;
+    }
+    
+    if (data.user) {
+      // Manually insert into profiles table since the trigger might not work properly
+      const { error: profileError } = await supabase
         .from('profiles')
-        .insert({
-          id: userId,
+        .upsert({
+          id: data.user.id,
           email,
           name,
           role
-        })
-        .select()
-        .single();
+        });
       
-      if (error) {
-        console.error('Error creating user profile:', error);
-        throw error;
+      if (profileError) {
+        console.error('Error creating profile:', profileError);
+        // Don't throw here as the user was created successfully
       }
-      
-      return { user: data, tempPassword };
     }
     
-    return { user: adminData.user, tempPassword };
+    return { user: data.user, tempPassword };
   }
 };

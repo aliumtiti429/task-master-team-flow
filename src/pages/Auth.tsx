@@ -15,7 +15,7 @@ const Auth = () => {
   const navigate = useNavigate();
   
   const [signInData, setSignInData] = useState({
-    email: '',
+    nameOrEmail: '',
     password: ''
   });
 
@@ -33,7 +33,7 @@ const Auth = () => {
     
     setIsSubmitting(true);
     try {
-      await signIn(signInData.email, signInData.password);
+      await signIn(signInData.nameOrEmail, signInData.password);
       toast({
         title: "Welcome back!",
         description: "You have been signed in successfully.",
@@ -41,7 +41,7 @@ const Auth = () => {
     } catch (error: any) {
       toast({
         title: "Sign in failed",
-        description: error.message || "Invalid email or password",
+        description: error.message || "Invalid name/email or password",
         variant: "destructive",
       });
     } finally {
@@ -65,18 +65,18 @@ const Auth = () => {
       <Card className="w-full max-w-md">
         <CardHeader className="text-center">
           <CardTitle className="text-2xl">Employee Task Manager</CardTitle>
-          <CardDescription>Sign in to your account</CardDescription>
+          <CardDescription>Sign in with your name or email</CardDescription>
         </CardHeader>
         <CardContent>
           <form onSubmit={handleSignIn} className="space-y-4">
             <div className="space-y-2">
-              <Label htmlFor="signin-email">Email</Label>
+              <Label htmlFor="signin-name-email">Full Name or Email</Label>
               <Input
-                id="signin-email"
-                type="email"
-                value={signInData.email}
-                onChange={(e) => setSignInData({...signInData, email: e.target.value})}
-                placeholder="Enter your email"
+                id="signin-name-email"
+                type="text"
+                value={signInData.nameOrEmail}
+                onChange={(e) => setSignInData({...signInData, nameOrEmail: e.target.value})}
+                placeholder="Enter your full name or email"
                 required
               />
             </div>
