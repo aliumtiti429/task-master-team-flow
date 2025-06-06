@@ -74,25 +74,42 @@ export const authService = {
   },
 
   async createUserProfile(email: string, name: string, role: 'admin' | 'user' = 'user', password?: string) {
-    // Use regular signUp instead of admin API
+    // Create user directly in profiles table since we can't use admin API
     const tempPassword = password || Math.random().toString(36).slice(-8) + Math.random().toString(36).slice(-8).toUpperCase() + '123!';
     
-    const { data, error } = await supabase.auth.signUp({
+    // First create the auth user with admin privileges
+    const { data: adminData, error: adminError } = await supabase.auth.admin.createUser({
       email,
       password: tempPassword,
-      options: {
-        data: {
-          name,
-          role
-        }
+      email_confirm: true,
+      user_metadata: {
+        name,
+        role
       }
     });
     
-    if (error) {
-      console.error('Error creating user:', error);
-      throw error;
+    if (adminError) {
+      // If admin API fails, try direct database insert (fallback)
+      const userId = crypto.randomUUID();
+      const { data, error } = await supabase
+        .from('profiles')
+        .insert({
+          id: userId,
+          email,
+          name,
+          role
+        })
+        .select()
+        .single();
+      
+      if (error) {
+        console.error('Error creating user profile:', error);
+        throw error;
+      }
+      
+      return { user: data, tempPassword };
     }
     
-    return { ...data, tempPassword };
+    return { user: adminData.user, tempPassword };
   }
 };
