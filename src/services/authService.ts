@@ -74,16 +74,17 @@ export const authService = {
   },
 
   async createUserProfile(email: string, name: string, role: 'admin' | 'user' = 'user', password?: string) {
-    // Generate a secure temporary password if none provided
+    // Use regular signUp instead of admin API
     const tempPassword = password || Math.random().toString(36).slice(-8) + Math.random().toString(36).slice(-8).toUpperCase() + '123!';
     
-    const { data, error } = await supabase.auth.admin.createUser({
+    const { data, error } = await supabase.auth.signUp({
       email,
       password: tempPassword,
-      email_confirm: true,
-      user_metadata: {
-        name,
-        role
+      options: {
+        data: {
+          name,
+          role
+        }
       }
     });
     

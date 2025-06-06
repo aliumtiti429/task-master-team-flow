@@ -148,7 +148,7 @@ const TaskForm = ({ task, profiles, onSubmit, onCancel }: TaskFormProps) => {
                 <SelectContent>
                   {profiles.map((profile) => (
                     <SelectItem key={profile.id} value={profile.id}>
-                      {profile.name} ({profile.role})
+                      {profile.name} ({profile.email})
                     </SelectItem>
                   ))}
                 </SelectContent>
