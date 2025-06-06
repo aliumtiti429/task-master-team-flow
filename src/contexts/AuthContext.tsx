@@ -34,6 +34,7 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
     // Set up auth state listener
     const { data: { subscription } } = supabase.auth.onAuthStateChange(
       async (event, session) => {
+        console.log('Auth state changed:', event, session?.user?.id);
         setSession(session);
         setUser(session?.user ?? null);
         
@@ -41,6 +42,7 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
           // Fetch user profile
           setTimeout(async () => {
             const userProfile = await authService.getUserProfile(session.user.id);
+            console.log('Fetched user profile:', userProfile);
             setProfile(userProfile);
           }, 0);
         } else {
@@ -53,11 +55,15 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
 
     // Get initial session
     supabase.auth.getSession().then(({ data: { session } }) => {
+      console.log('Initial session:', session?.user?.id);
       setSession(session);
       setUser(session?.user ?? null);
       
       if (session?.user) {
-        authService.getUserProfile(session.user.id).then(setProfile);
+        authService.getUserProfile(session.user.id).then((profile) => {
+          console.log('Initial profile fetch:', profile);
+          setProfile(profile);
+        });
       }
       
       setLoading(false);
@@ -67,9 +73,11 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
   }, []);
 
   const signIn = async (nameOrEmail: string, password: string) => {
+    console.log('Attempting sign in with:', nameOrEmail);
     const { user } = await authService.signIn(nameOrEmail, password);
     if (user) {
       const userProfile = await authService.getUserProfile(user.id);
+      console.log('Sign in successful, profile:', userProfile);
       setProfile(userProfile);
     }
   };

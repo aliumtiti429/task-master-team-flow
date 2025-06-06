@@ -17,17 +17,19 @@ export const authService = {
     // Check if the input looks like a name (doesn't contain @)
     if (!emailOrName.includes('@')) {
       // Look up email by name in profiles table
-      const { data: profile } = await supabase
+      const { data: profile, error: profileError } = await supabase
         .from('profiles')
         .select('email')
         .eq('name', emailOrName)
         .single();
       
-      if (!profile) {
+      if (profileError || !profile) {
+        console.log('Profile lookup error:', profileError);
         throw new Error('User not found with that name');
       }
       
       email = profile.email;
+      console.log('Found email for name:', email);
     }
     
     const { data, error } = await supabase.auth.signInWithPassword({
@@ -92,42 +94,54 @@ export const authService = {
   },
 
   async createUserProfile(email: string, name: string, role: 'admin' | 'user' = 'user', password?: string) {
+    console.log('Creating user with:', { email, name, role });
+    
     const tempPassword = password || Math.random().toString(36).slice(-8) + Math.random().toString(36).slice(-8).toUpperCase() + '123!';
     
-    // Use regular signUp to create auth user and profile
-    const { data, error } = await supabase.auth.signUp({
-      email,
-      password: tempPassword,
-      options: {
-        data: {
-          name,
-          role
-        }
+    try {
+      // First create the auth user
+      const { data: authData, error: authError } = await supabase.auth.signUp({
+        email,
+        password: tempPassword,
+      });
+      
+      if (authError) {
+        console.error('Auth signup error:', authError);
+        throw authError;
       }
-    });
-    
-    if (error) {
-      console.error('Error creating user:', error);
+      
+      console.log('Auth user created:', authData.user?.id);
+      
+      if (authData.user) {
+        // Wait a bit for the auth user to be fully created
+        await new Promise(resolve => setTimeout(resolve, 100));
+        
+        // Now create the profile
+        const { data: profileData, error: profileError } = await supabase
+          .from('profiles')
+          .insert({
+            id: authData.user.id,
+            email,
+            name,
+            role
+          })
+          .select()
+          .single();
+        
+        if (profileError) {
+          console.error('Profile creation error:', profileError);
+          // If profile creation fails, try to clean up the auth user
+          await supabase.auth.admin.deleteUser(authData.user.id);
+          throw new Error(`Failed to create user profile: ${profileError.message}`);
+        }
+        
+        console.log('Profile created successfully:', profileData);
+      }
+      
+      return { user: authData.user, tempPassword };
+    } catch (error) {
+      console.error('User creation failed:', error);
       throw error;
     }
-    
-    if (data.user) {
-      // Manually insert into profiles table since the trigger might not work properly
-      const { error: profileError } = await supabase
-        .from('profiles')
-        .upsert({
-          id: data.user.id,
-          email,
-          name,
-          role
-        });
-      
-      if (profileError) {
-        console.error('Error creating profile:', profileError);
-        // Don't throw here as the user was created successfully
-      }
-    }
-    
-    return { user: data.user, tempPassword };
   }
 };
