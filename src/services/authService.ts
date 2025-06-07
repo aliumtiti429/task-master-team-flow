@@ -11,26 +11,23 @@ export interface UserProfile {
 }
 
 export const authService = {
-  async signIn(emailOrName: string, password: string) {
-    let email = emailOrName;
+  async signIn(name: string, password: string) {
+    console.log('Attempting sign in with name:', name);
     
-    // Check if the input looks like a name (doesn't contain @)
-    if (!emailOrName.includes('@')) {
-      // Look up email by name in profiles table
-      const { data: profile, error: profileError } = await supabase
-        .from('profiles')
-        .select('email')
-        .eq('name', emailOrName)
-        .single();
-      
-      if (profileError || !profile) {
-        console.log('Profile lookup error:', profileError);
-        throw new Error('User not found with that name');
-      }
-      
-      email = profile.email;
-      console.log('Found email for name:', email);
+    // Look up email by name in profiles table
+    const { data: profile, error: profileError } = await supabase
+      .from('profiles')
+      .select('email')
+      .eq('name', name)
+      .single();
+    
+    if (profileError || !profile) {
+      console.log('Profile lookup error:', profileError);
+      throw new Error('Employee not found with that name');
     }
+    
+    const email = profile.email;
+    console.log('Found email for name:', email);
     
     const { data, error } = await supabase.auth.signInWithPassword({
       email,
@@ -93,16 +90,22 @@ export const authService = {
     return data || [];
   },
 
-  async createUserProfile(email: string, name: string, role: 'admin' | 'user' = 'user', password?: string) {
-    console.log('Creating user with:', { email, name, role });
+  async createEmployee(email: string, name: string, role: 'admin' | 'user' = 'user', password?: string) {
+    console.log('Creating employee with:', { email, name, role });
     
     const tempPassword = password || Math.random().toString(36).slice(-8) + Math.random().toString(36).slice(-8).toUpperCase() + '123!';
     
     try {
-      // First create the auth user
+      // Create the auth user with metadata
       const { data: authData, error: authError } = await supabase.auth.signUp({
         email,
         password: tempPassword,
+        options: {
+          data: {
+            name: name,
+            role: role
+          }
+        }
       });
       
       if (authError) {
@@ -112,35 +115,10 @@ export const authService = {
       
       console.log('Auth user created:', authData.user?.id);
       
-      if (authData.user) {
-        // Wait a bit for the auth user to be fully created
-        await new Promise(resolve => setTimeout(resolve, 100));
-        
-        // Now create the profile
-        const { data: profileData, error: profileError } = await supabase
-          .from('profiles')
-          .insert({
-            id: authData.user.id,
-            email,
-            name,
-            role
-          })
-          .select()
-          .single();
-        
-        if (profileError) {
-          console.error('Profile creation error:', profileError);
-          // If profile creation fails, try to clean up the auth user
-          await supabase.auth.admin.deleteUser(authData.user.id);
-          throw new Error(`Failed to create user profile: ${profileError.message}`);
-        }
-        
-        console.log('Profile created successfully:', profileData);
-      }
-      
+      // The trigger will automatically create the profile
       return { user: authData.user, tempPassword };
     } catch (error) {
-      console.error('User creation failed:', error);
+      console.error('Employee creation failed:', error);
       throw error;
     }
   }

@@ -16,45 +16,45 @@ import { useToast } from "@/hooks/use-toast";
 const UserManagement = () => {
   const { toast } = useToast();
   const queryClient = useQueryClient();
-  const [showAddUser, setShowAddUser] = useState(false);
+  const [showAddEmployee, setShowAddEmployee] = useState(false);
   const [showPassword, setShowPassword] = useState(false);
   const [generatedPassword, setGeneratedPassword] = useState('');
-  const [newUserData, setNewUserData] = useState({
+  const [newEmployeeData, setNewEmployeeData] = useState({
     email: '',
     name: '',
     role: 'user' as 'admin' | 'user'
   });
 
-  const { data: users = [], isLoading } = useQuery({
-    queryKey: ['users'],
+  const { data: employees = [], isLoading } = useQuery({
+    queryKey: ['employees'],
     queryFn: authService.getAllProfiles,
   });
 
-  const createUserMutation = useMutation({
+  const createEmployeeMutation = useMutation({
     mutationFn: ({ email, name, role }: { email: string; name: string; role: 'admin' | 'user' }) =>
-      authService.createUserProfile(email, name, role),
+      authService.createEmployee(email, name, role),
     onSuccess: (data) => {
-      queryClient.invalidateQueries({ queryKey: ['users'] });
+      queryClient.invalidateQueries({ queryKey: ['employees'] });
       setGeneratedPassword(data.tempPassword);
       setShowPassword(true);
-      setNewUserData({ email: '', name: '', role: 'user' });
+      setNewEmployeeData({ email: '', name: '', role: 'user' });
       toast({
-        title: "User Created Successfully",
-        description: "The user account has been created with a temporary password.",
+        title: "Employee Created Successfully",
+        description: "The employee account has been created with a temporary password.",
       });
     },
     onError: (error: any) => {
       toast({
-        title: "Error Creating User",
-        description: error.message || "Failed to create user account",
+        title: "Error Creating Employee",
+        description: error.message || "Failed to create employee account",
         variant: "destructive",
       });
     },
   });
 
-  const handleCreateUser = (e: React.FormEvent) => {
+  const handleCreateEmployee = (e: React.FormEvent) => {
     e.preventDefault();
-    if (!newUserData.email || !newUserData.name) {
+    if (!newEmployeeData.email || !newEmployeeData.name) {
       toast({
         title: "Missing Information",
         description: "Please fill in all required fields",
@@ -62,184 +62,198 @@ const UserManagement = () => {
       });
       return;
     }
-    createUserMutation.mutate(newUserData);
+    createEmployeeMutation.mutate(newEmployeeData);
   };
 
   const handleCloseForm = () => {
-    setShowAddUser(false);
+    setShowAddEmployee(false);
     setShowPassword(false);
     setGeneratedPassword('');
-    setNewUserData({ email: '', name: '', role: 'user' });
+    setNewEmployeeData({ email: '', name: '', role: 'user' });
   };
 
   if (isLoading) {
-    return <div className="text-center py-8">Loading users...</div>;
+    return (
+      <div className="min-h-screen bg-white">
+        <div className="text-center py-8">
+          <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-red-600 mx-auto"></div>
+          <p className="mt-4 text-gray-600">Loading employees...</p>
+        </div>
+      </div>
+    );
   }
 
   return (
-    <div className="space-y-6">
-      <div className="flex justify-between items-center">
-        <h2 className="text-2xl font-bold">User Management</h2>
-        <Button 
-          onClick={() => setShowAddUser(true)}
-          className="bg-blue-600 hover:bg-blue-700"
-        >
-          <Plus className="h-4 w-4 mr-2" />
-          Add User
-        </Button>
-      </div>
+    <div className="min-h-screen bg-white p-6">
+      <div className="max-w-7xl mx-auto space-y-6">
+        <div className="flex justify-between items-center">
+          <h2 className="text-3xl font-bold text-black">Employee Management</h2>
+          <Button 
+            onClick={() => setShowAddEmployee(true)}
+            className="bg-red-600 hover:bg-red-700 text-white shadow-lg"
+          >
+            <Plus className="h-4 w-4 mr-2" />
+            Add Employee
+          </Button>
+        </div>
 
-      {showAddUser && (
-        <Card>
-          <CardHeader>
-            <CardTitle className="flex items-center gap-2">
-              <UserPlus className="h-5 w-5" />
-              Create New User Account
-            </CardTitle>
-          </CardHeader>
-          <CardContent>
-            {showPassword && generatedPassword ? (
-              <div className="space-y-4">
-                <Alert>
-                  <AlertDescription>
-                    <strong>User created successfully!</strong> Please share these login credentials with the new user:
-                  </AlertDescription>
-                </Alert>
-                
-                <div className="space-y-3 p-4 bg-slate-50 rounded-lg">
-                  <div>
-                    <Label className="text-sm font-medium">Email:</Label>
-                    <p className="font-mono text-sm bg-white p-2 rounded border">{newUserData.email}</p>
-                  </div>
-                  <div>
-                    <Label className="text-sm font-medium">Temporary Password:</Label>
-                    <div className="flex items-center gap-2">
-                      <p className="font-mono text-sm bg-white p-2 rounded border flex-1">
-                        {showPassword ? generatedPassword : '••••••••••••'}
-                      </p>
-                      <Button
-                        variant="outline"
-                        size="sm"
-                        onClick={() => setShowPassword(!showPassword)}
-                      >
-                        {showPassword ? <EyeOff className="h-4 w-4" /> : <Eye className="h-4 w-4" />}
-                      </Button>
+        {showAddEmployee && (
+          <Card className="shadow-xl border-0">
+            <CardHeader className="bg-gradient-to-r from-red-600 to-red-700 text-white">
+              <CardTitle className="flex items-center gap-2">
+                <UserPlus className="h-5 w-5" />
+                Create New Employee Account
+              </CardTitle>
+            </CardHeader>
+            <CardContent className="p-6 bg-white">
+              {showPassword && generatedPassword ? (
+                <div className="space-y-4">
+                  <Alert className="border-green-200 bg-green-50">
+                    <AlertDescription className="text-green-800">
+                      <strong>Employee created successfully!</strong> Please share these login credentials with the new employee:
+                    </AlertDescription>
+                  </Alert>
+                  
+                  <div className="space-y-3 p-4 bg-gray-50 rounded-lg border">
+                    <div>
+                      <Label className="text-sm font-medium text-black">Full Name:</Label>
+                      <p className="font-mono text-sm bg-white p-2 rounded border text-black">{newEmployeeData.name}</p>
+                    </div>
+                    <div>
+                      <Label className="text-sm font-medium text-black">Temporary Password:</Label>
+                      <div className="flex items-center gap-2">
+                        <p className="font-mono text-sm bg-white p-2 rounded border flex-1 text-black">
+                          {showPassword ? generatedPassword : '••••••••••••'}
+                        </p>
+                        <Button
+                          variant="outline"
+                          size="sm"
+                          onClick={() => setShowPassword(!showPassword)}
+                          className="border-gray-300 text-gray-700"
+                        >
+                          {showPassword ? <EyeOff className="h-4 w-4" /> : <Eye className="h-4 w-4" />}
+                        </Button>
+                      </div>
                     </div>
                   </div>
-                </div>
-                
-                <Alert>
-                  <AlertDescription>
-                    <strong>Important:</strong> The user should change this password after their first login for security.
-                  </AlertDescription>
-                </Alert>
-                
-                <Button onClick={handleCloseForm} className="w-full">
-                  Done
-                </Button>
-              </div>
-            ) : (
-              <form onSubmit={handleCreateUser} className="space-y-4">
-                <div className="grid grid-cols-2 gap-4">
-                  <div className="space-y-2">
-                    <Label htmlFor="user-name">Full Name *</Label>
-                    <Input
-                      id="user-name"
-                      value={newUserData.name}
-                      onChange={(e) => setNewUserData({...newUserData, name: e.target.value})}
-                      placeholder="Enter full name"
-                      required
-                    />
-                  </div>
-                  <div className="space-y-2">
-                    <Label htmlFor="user-email">Email Address *</Label>
-                    <Input
-                      id="user-email"
-                      type="email"
-                      value={newUserData.email}
-                      onChange={(e) => setNewUserData({...newUserData, email: e.target.value})}
-                      placeholder="Enter email address"
-                      required
-                    />
-                  </div>
-                </div>
-                <div className="space-y-2">
-                  <Label htmlFor="user-role">Role *</Label>
-                  <Select 
-                    value={newUserData.role} 
-                    onValueChange={(value: 'admin' | 'user') => setNewUserData({...newUserData, role: value})}
-                  >
-                    <SelectTrigger>
-                      <SelectValue placeholder="Select user role" />
-                    </SelectTrigger>
-                    <SelectContent>
-                      <SelectItem value="user">User</SelectItem>
-                      <SelectItem value="admin">Admin</SelectItem>
-                    </SelectContent>
-                  </Select>
-                </div>
-                
-                <Alert>
-                  <AlertDescription>
-                    A temporary password will be automatically generated for the new user. They should change it after their first login.
-                  </AlertDescription>
-                </Alert>
-                
-                <div className="flex space-x-3">
-                  <Button 
-                    type="submit" 
-                    disabled={createUserMutation.isPending}
-                    className="bg-green-600 hover:bg-green-700"
-                  >
-                    {createUserMutation.isPending ? 'Creating Account...' : 'Create User Account'}
-                  </Button>
-                  <Button 
-                    type="button" 
-                    variant="outline" 
-                    onClick={handleCloseForm}
-                  >
-                    Cancel
+                  
+                  <Alert className="border-orange-200 bg-orange-50">
+                    <AlertDescription className="text-orange-800">
+                      <strong>Important:</strong> The employee should change this password after their first login for security.
+                    </AlertDescription>
+                  </Alert>
+                  
+                  <Button onClick={handleCloseForm} className="w-full bg-red-600 hover:bg-red-700 text-white">
+                    Done
                   </Button>
                 </div>
-              </form>
-            )}
+              ) : (
+                <form onSubmit={handleCreateEmployee} className="space-y-4">
+                  <div className="grid grid-cols-2 gap-4">
+                    <div className="space-y-2">
+                      <Label htmlFor="employee-name" className="text-black font-medium">Full Name *</Label>
+                      <Input
+                        id="employee-name"
+                        value={newEmployeeData.name}
+                        onChange={(e) => setNewEmployeeData({...newEmployeeData, name: e.target.value})}
+                        placeholder="Enter full name"
+                        required
+                        className="border-gray-300 focus:border-red-500 focus:ring-red-500"
+                      />
+                    </div>
+                    <div className="space-y-2">
+                      <Label htmlFor="employee-email" className="text-black font-medium">Email Address *</Label>
+                      <Input
+                        id="employee-email"
+                        type="email"
+                        value={newEmployeeData.email}
+                        onChange={(e) => setNewEmployeeData({...newEmployeeData, email: e.target.value})}
+                        placeholder="Enter email address"
+                        required
+                        className="border-gray-300 focus:border-red-500 focus:ring-red-500"
+                      />
+                    </div>
+                  </div>
+                  <div className="space-y-2">
+                    <Label htmlFor="employee-role" className="text-black font-medium">Role *</Label>
+                    <Select 
+                      value={newEmployeeData.role} 
+                      onValueChange={(value: 'admin' | 'user') => setNewEmployeeData({...newEmployeeData, role: value})}
+                    >
+                      <SelectTrigger className="border-gray-300 focus:border-red-500 focus:ring-red-500">
+                        <SelectValue placeholder="Select employee role" />
+                      </SelectTrigger>
+                      <SelectContent className="bg-white">
+                        <SelectItem value="user">Employee</SelectItem>
+                        <SelectItem value="admin">Admin</SelectItem>
+                      </SelectContent>
+                    </Select>
+                  </div>
+                  
+                  <Alert className="border-blue-200 bg-blue-50">
+                    <AlertDescription className="text-blue-800">
+                      A temporary password will be automatically generated for the new employee. They should change it after their first login.
+                    </AlertDescription>
+                  </Alert>
+                  
+                  <div className="flex space-x-3">
+                    <Button 
+                      type="submit" 
+                      disabled={createEmployeeMutation.isPending}
+                      className="bg-red-600 hover:bg-red-700 text-white"
+                    >
+                      {createEmployeeMutation.isPending ? 'Creating Account...' : 'Create Employee Account'}
+                    </Button>
+                    <Button 
+                      type="button" 
+                      variant="outline" 
+                      onClick={handleCloseForm}
+                      className="border-gray-300 text-gray-700 hover:bg-gray-50"
+                    >
+                      Cancel
+                    </Button>
+                  </div>
+                </form>
+              )}
+            </CardContent>
+          </Card>
+        )}
+
+        <Card className="shadow-xl border-0">
+          <CardHeader className="bg-gradient-to-r from-gray-800 to-gray-900 text-white">
+            <CardTitle>All Employees</CardTitle>
+          </CardHeader>
+          <CardContent className="p-0 bg-white">
+            <Table>
+              <TableHeader>
+                <TableRow className="bg-gray-50">
+                  <TableHead className="text-black font-semibold">Name</TableHead>
+                  <TableHead className="text-black font-semibold">Email</TableHead>
+                  <TableHead className="text-black font-semibold">Role</TableHead>
+                  <TableHead className="text-black font-semibold">Created</TableHead>
+                </TableRow>
+              </TableHeader>
+              <TableBody>
+                {employees.map((employee) => (
+                  <TableRow key={employee.id} className="hover:bg-gray-50">
+                    <TableCell className="font-medium text-black">{employee.name}</TableCell>
+                    <TableCell className="text-gray-700">{employee.email}</TableCell>
+                    <TableCell>
+                      <Badge variant={employee.role === 'admin' ? 'default' : 'secondary'} 
+                             className={employee.role === 'admin' ? 'bg-red-600 text-white' : 'bg-gray-200 text-gray-800'}>
+                        {employee.role === 'admin' ? 'Admin' : 'Employee'}
+                      </Badge>
+                    </TableCell>
+                    <TableCell className="text-gray-700">
+                      {new Date(employee.created_at || '').toLocaleDateString()}
+                    </TableCell>
+                  </TableRow>
+                ))}
+              </TableBody>
+            </Table>
           </CardContent>
         </Card>
-      )}
-
-      <Card>
-        <CardHeader>
-          <CardTitle>All Users</CardTitle>
-        </CardHeader>
-        <CardContent>
-          <Table>
-            <TableHeader>
-              <TableRow>
-                <TableHead>Name</TableHead>
-                <TableHead>Email</TableHead>
-                <TableHead>Role</TableHead>
-                <TableHead>Created</TableHead>
-              </TableRow>
-            </TableHeader>
-            <TableBody>
-              {users.map((user) => (
-                <TableRow key={user.id}>
-                  <TableCell className="font-medium">{user.name}</TableCell>
-                  <TableCell>{user.email}</TableCell>
-                  <TableCell>
-                    <Badge variant={user.role === 'admin' ? 'default' : 'secondary'}>
-                      {user.role}
-                    </Badge>
-                  </TableCell>
-                  <TableCell>
-                    {new Date(user.created_at || '').toLocaleDateString()}
-                  </TableCell>
-                </TableRow>
-              ))}
-            </TableBody>
-          </Table>
-        </CardContent>
-      </Card>
+      </div>
     </div>
   );
 };
