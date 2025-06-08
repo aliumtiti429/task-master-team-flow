@@ -5,7 +5,8 @@ export interface UserProfile {
   id: string;
   email: string;
   name: string;
-  role: 'admin' | 'user';
+  department: string;
+  position: string;
   created_at?: string;
   updated_at?: string;
 }
@@ -14,19 +15,19 @@ export const authService = {
   async signIn(name: string, password: string) {
     console.log('Attempting sign in with name:', name);
     
-    // Look up email by name in profiles table
-    const { data: profile, error: profileError } = await supabase
-      .from('profiles')
+    // Look up email by name in employees table
+    const { data: employee, error: employeeError } = await supabase
+      .from('employees')
       .select('email')
       .eq('name', name)
       .single();
     
-    if (profileError || !profile) {
-      console.log('Profile lookup error:', profileError);
+    if (employeeError || !employee) {
+      console.log('Employee lookup error:', employeeError);
       throw new Error('Employee not found with that name');
     }
     
-    const email = profile.email;
+    const email = employee.email;
     console.log('Found email for name:', email);
     
     const { data, error } = await supabase.auth.signInWithPassword({
@@ -62,10 +63,14 @@ export const authService = {
   },
 
   async getUserProfile(userId: string): Promise<UserProfile | null> {
+    // Get user email first
+    const { data: { user } } = await supabase.auth.getUser();
+    if (!user) return null;
+
     const { data, error } = await supabase
-      .from('profiles')
+      .from('employees')
       .select('*')
-      .eq('id', userId)
+      .eq('email', user.email)
       .single();
     
     if (error) {
@@ -78,48 +83,15 @@ export const authService = {
 
   async getAllProfiles(): Promise<UserProfile[]> {
     const { data, error } = await supabase
-      .from('profiles')
+      .from('employees')
       .select('*')
       .order('created_at', { ascending: false });
     
     if (error) {
-      console.error('Error fetching profiles:', error);
+      console.error('Error fetching employees:', error);
       throw error;
     }
     
     return data || [];
-  },
-
-  async createEmployee(email: string, name: string, role: 'admin' | 'user' = 'user', password?: string) {
-    console.log('Creating employee with:', { email, name, role });
-    
-    const tempPassword = password || Math.random().toString(36).slice(-8) + Math.random().toString(36).slice(-8).toUpperCase() + '123!';
-    
-    try {
-      // Create the auth user with metadata
-      const { data: authData, error: authError } = await supabase.auth.signUp({
-        email,
-        password: tempPassword,
-        options: {
-          data: {
-            name: name,
-            role: role
-          }
-        }
-      });
-      
-      if (authError) {
-        console.error('Auth signup error:', authError);
-        throw authError;
-      }
-      
-      console.log('Auth user created:', authData.user?.id);
-      
-      // The trigger will automatically create the profile
-      return { user: authData.user, tempPassword };
-    } catch (error) {
-      console.error('Employee creation failed:', error);
-      throw error;
-    }
   }
 };

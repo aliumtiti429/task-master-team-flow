@@ -11,7 +11,6 @@ interface AuthContextType {
   loading: boolean;
   signIn: (name: string, password: string) => Promise<void>;
   signOut: () => Promise<void>;
-  isAdmin: () => boolean;
 }
 
 const AuthContext = createContext<AuthContextType | undefined>(undefined);
@@ -39,7 +38,7 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
         setUser(session?.user ?? null);
         
         if (session?.user) {
-          // Fetch user profile
+          // Fetch user profile from employees table
           setTimeout(async () => {
             const userProfile = await authService.getUserProfile(session.user.id);
             console.log('Fetched user profile:', userProfile);
@@ -87,18 +86,13 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
     setProfile(null);
   };
 
-  const isAdmin = () => {
-    return profile?.role === 'admin';
-  };
-
   const value = {
     user,
     session,
     profile,
     loading,
     signIn,
-    signOut,
-    isAdmin
+    signOut
   };
 
   return <AuthContext.Provider value={value}>{children}</AuthContext.Provider>;

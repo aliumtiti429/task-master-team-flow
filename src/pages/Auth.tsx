@@ -8,7 +8,6 @@ import { useAuth } from "@/contexts/AuthContext";
 import { useToast } from "@/hooks/use-toast";
 import { useNavigate } from "react-router-dom";
 import { useEffect } from "react";
-import AdminCreator from "@/components/AdminCreator";
 
 const Auth = () => {
   const { signIn, user, loading } = useAuth();
@@ -64,8 +63,6 @@ const Auth = () => {
   return (
     <div className="min-h-screen bg-gradient-to-br from-gray-50 to-gray-100 flex items-center justify-center p-4">
       <div className="w-full max-w-md space-y-4">
-        <AdminCreator />
-        
         <Card className="shadow-xl border-0">
           <CardHeader className="text-center bg-gradient-to-r from-red-600 to-red-700 text-white rounded-t-lg">
             <CardTitle className="text-2xl font-bold">Employee Portal</CardTitle>
@@ -107,8 +104,7 @@ const Auth = () => {
             </form>
             
             <div className="mt-6 text-center text-sm text-gray-600">
-              <p>Don't have an account?</p>
-              <p className="mt-1 text-gray-500">Contact your administrator to create an employee account for you.</p>
+              <p>Contact your administrator if you need an account.</p>
             </div>
           </CardContent>
         </Card>
