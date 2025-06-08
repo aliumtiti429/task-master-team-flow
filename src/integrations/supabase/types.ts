@@ -18,6 +18,7 @@ export type Database = {
           id: string
           name: string
           position: string
+          role: Database["public"]["Enums"]["app_role"]
           updated_at: string
         }
         Insert: {
@@ -28,6 +29,7 @@ export type Database = {
           id?: string
           name: string
           position: string
+          role?: Database["public"]["Enums"]["app_role"]
           updated_at?: string
         }
         Update: {
@@ -38,6 +40,7 @@ export type Database = {
           id?: string
           name?: string
           position?: string
+          role?: Database["public"]["Enums"]["app_role"]
           updated_at?: string
         }
         Relationships: []
@@ -48,7 +51,6 @@ export type Database = {
           email: string
           id: string
           name: string
-          role: Database["public"]["Enums"]["app_role"]
           updated_at: string
         }
         Insert: {
@@ -56,7 +58,6 @@ export type Database = {
           email: string
           id: string
           name: string
-          role?: Database["public"]["Enums"]["app_role"]
           updated_at?: string
         }
         Update: {
@@ -64,7 +65,6 @@ export type Database = {
           email?: string
           id?: string
           name?: string
-          role?: Database["public"]["Enums"]["app_role"]
           updated_at?: string
         }
         Relationships: []
@@ -118,10 +118,7 @@ export type Database = {
       [_ in never]: never
     }
     Functions: {
-      get_current_user_role: {
-        Args: Record<PropertyKey, never>
-        Returns: Database["public"]["Enums"]["app_role"]
-      }
+      [_ in never]: never
     }
     Enums: {
       app_role: "admin" | "user"

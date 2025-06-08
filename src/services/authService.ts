@@ -7,6 +7,7 @@ export interface UserProfile {
   name: string;
   department: string;
   position: string;
+  role: 'admin' | 'user';
   created_at?: string;
   updated_at?: string;
 }

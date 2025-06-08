@@ -7,6 +7,7 @@ export interface Employee {
   email: string;
   department: string;
   position: string;
+  role: 'admin' | 'user';
   avatar?: string;
   created_at?: string;
   updated_at?: string;

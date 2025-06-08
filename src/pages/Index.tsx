@@ -3,7 +3,7 @@ import { useState, useEffect } from "react";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
-import { Users, CheckSquare, Plus, BarChart3, LogOut } from "lucide-react";
+import { Users, CheckSquare, Plus, BarChart3, LogOut, Calendar, Clock, Target } from "lucide-react";
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { useNavigate } from "react-router-dom";
 import EmployeeList from "@/components/EmployeeList";
@@ -19,7 +19,7 @@ const Index = () => {
   const { toast } = useToast();
   const queryClient = useQueryClient();
   const navigate = useNavigate();
-  const { user, profile, loading, signOut } = useAuth();
+  const { user, profile, loading, isAdmin, signOut } = useAuth();
 
   // Redirect to auth if not logged in
   useEffect(() => {
@@ -52,7 +52,7 @@ const Index = () => {
   const [taskPriorityFilter, setTaskPriorityFilter] = useState("");
   const [taskStatusFilter, setTaskStatusFilter] = useState("");
 
-  // Employee mutations
+  // Employee mutations (admin only)
   const createEmployeeMutation = useMutation({
     mutationFn: employeeService.create,
     onSuccess: (data) => {
@@ -259,12 +259,13 @@ const Index = () => {
     }
   };
 
-  // Get stats
+  // Get stats (filtered for employees)
   const getStats = () => {
-    const totalTasks = tasks.length;
-    const completedTasks = tasks.filter(t => t.status === 'completed').length;
-    const inProgressTasks = tasks.filter(t => t.status === 'in-progress').length;
-    const pendingTasks = tasks.filter(t => t.status === 'pending').length;
+    const userTasks = isAdmin ? tasks : tasks.filter(t => t.assigned_to === profile?.id);
+    const totalTasks = userTasks.length;
+    const completedTasks = userTasks.filter(t => t.status === 'completed').length;
+    const inProgressTasks = userTasks.filter(t => t.status === 'in-progress').length;
+    const pendingTasks = userTasks.filter(t => t.status === 'pending').length;
     
     return {
       totalEmployees: employees.length,
@@ -278,10 +279,10 @@ const Index = () => {
 
   if (loading || employeesLoading || tasksLoading) {
     return (
-      <div className="min-h-screen bg-gradient-to-br from-slate-50 to-blue-50 flex items-center justify-center">
+      <div className="min-h-screen bg-white flex items-center justify-center">
         <div className="text-center">
-          <div className="animate-spin rounded-full h-32 w-32 border-b-2 border-blue-600 mx-auto"></div>
-          <p className="mt-4 text-slate-600">Loading your data...</p>
+          <div className="animate-spin rounded-full h-32 w-32 border-b-2 border-red-600 mx-auto"></div>
+          <p className="mt-4 text-gray-700">Loading your data...</p>
         </div>
       </div>
     );
@@ -294,22 +295,22 @@ const Index = () => {
   const stats = getStats();
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-slate-50 to-blue-50">
+    <div className="min-h-screen bg-white">
       <div className="container mx-auto p-6 max-w-7xl">
         {/* Header */}
-        <div className="mb-8 flex justify-between items-center">
+        <div className="mb-8 flex justify-between items-center border-b border-gray-200 pb-6">
           <div>
-            <h1 className="text-4xl font-bold text-slate-800 mb-2">
-              Employee Task Manager
+            <h1 className="text-4xl font-bold text-gray-900 mb-2">
+              {isAdmin ? 'Admin Dashboard' : 'Employee Dashboard'}
             </h1>
-            <p className="text-slate-600 text-lg">
+            <p className="text-gray-600 text-lg">
               Welcome back, {profile?.name} ({profile?.position})
             </p>
           </div>
           <Button 
             onClick={handleSignOut}
             variant="outline"
-            className="flex items-center gap-2"
+            className="flex items-center gap-2 border-red-200 text-red-700 hover:bg-red-50"
           >
             <LogOut className="h-4 w-4" />
             Sign Out
@@ -318,51 +319,51 @@ const Index = () => {
 
         {/* Stats Cards */}
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6 mb-8">
-          <Card className="bg-white shadow-sm border-0 hover:shadow-md transition-shadow">
+          {isAdmin && (
+            <Card className="bg-gradient-to-r from-red-50 to-red-100 border-red-200">
+              <CardContent className="p-6">
+                <div className="flex items-center">
+                  <Users className="h-8 w-8 text-red-600" />
+                  <div className="ml-4">
+                    <p className="text-sm font-medium text-red-700">Total Employees</p>
+                    <p className="text-2xl font-bold text-gray-900">{stats.totalEmployees}</p>
+                  </div>
+                </div>
+              </CardContent>
+            </Card>
+          )}
+
+          <Card className="bg-gradient-to-r from-gray-50 to-gray-100 border-gray-200">
             <CardContent className="p-6">
               <div className="flex items-center">
-                <Users className="h-8 w-8 text-blue-600" />
+                <CheckSquare className="h-8 w-8 text-gray-600" />
                 <div className="ml-4">
-                  <p className="text-sm font-medium text-slate-600">Total Employees</p>
-                  <p className="text-2xl font-bold text-slate-900">{stats.totalEmployees}</p>
+                  <p className="text-sm font-medium text-gray-700">{isAdmin ? 'Total Tasks' : 'My Tasks'}</p>
+                  <p className="text-2xl font-bold text-gray-900">{stats.totalTasks}</p>
                 </div>
               </div>
             </CardContent>
           </Card>
 
-          <Card className="bg-white shadow-sm border-0 hover:shadow-md transition-shadow">
+          <Card className="bg-gradient-to-r from-red-50 to-red-100 border-red-200">
             <CardContent className="p-6">
               <div className="flex items-center">
-                <CheckSquare className="h-8 w-8 text-green-600" />
+                <Target className="h-8 w-8 text-red-600" />
                 <div className="ml-4">
-                  <p className="text-sm font-medium text-slate-600">Total Tasks</p>
-                  <p className="text-2xl font-bold text-slate-900">{stats.totalTasks}</p>
+                  <p className="text-sm font-medium text-red-700">Completion Rate</p>
+                  <p className="text-2xl font-bold text-gray-900">{stats.completionRate}%</p>
                 </div>
               </div>
             </CardContent>
           </Card>
 
-          <Card className="bg-white shadow-sm border-0 hover:shadow-md transition-shadow">
+          <Card className="bg-gradient-to-r from-gray-50 to-gray-100 border-gray-200">
             <CardContent className="p-6">
               <div className="flex items-center">
-                <BarChart3 className="h-8 w-8 text-purple-600" />
+                <Clock className="h-8 w-8 text-gray-600" />
                 <div className="ml-4">
-                  <p className="text-sm font-medium text-slate-600">Completion Rate</p>
-                  <p className="text-2xl font-bold text-slate-900">{stats.completionRate}%</p>
-                </div>
-              </div>
-            </CardContent>
-          </Card>
-
-          <Card className="bg-white shadow-sm border-0 hover:shadow-md transition-shadow">
-            <CardContent className="p-6">
-              <div className="flex items-center">
-                <div className="h-8 w-8 bg-orange-100 rounded-full flex items-center justify-center">
-                  <div className="h-3 w-3 bg-orange-600 rounded-full"></div>
-                </div>
-                <div className="ml-4">
-                  <p className="text-sm font-medium text-slate-600">In Progress</p>
-                  <p className="text-2xl font-bold text-slate-900">{stats.inProgressTasks}</p>
+                  <p className="text-sm font-medium text-gray-700">In Progress</p>
+                  <p className="text-2xl font-bold text-gray-900">{stats.inProgressTasks}</p>
                 </div>
               </div>
             </CardContent>
@@ -370,82 +371,88 @@ const Index = () => {
         </div>
 
         {/* Main Content */}
-        <Tabs defaultValue="employees" className="space-y-6">
-          <TabsList className="grid w-full grid-cols-2 lg:w-[400px]">
-            <TabsTrigger value="employees" className="flex items-center gap-2">
-              <Users className="h-4 w-4" />
-              Employees
-            </TabsTrigger>
-            <TabsTrigger value="tasks" className="flex items-center gap-2">
+        <Tabs defaultValue={isAdmin ? "employees" : "tasks"} className="space-y-6">
+          <TabsList className={`grid w-full ${isAdmin ? 'grid-cols-2' : 'grid-cols-1'} lg:w-[400px] bg-gray-100`}>
+            {isAdmin && (
+              <TabsTrigger value="employees" className="flex items-center gap-2 data-[state=active]:bg-red-100 data-[state=active]:text-red-700">
+                <Users className="h-4 w-4" />
+                Employees
+              </TabsTrigger>
+            )}
+            <TabsTrigger value="tasks" className="flex items-center gap-2 data-[state=active]:bg-red-100 data-[state=active]:text-red-700">
               <CheckSquare className="h-4 w-4" />
               Tasks
             </TabsTrigger>
           </TabsList>
 
-          <TabsContent value="employees" className="space-y-6">
-            <Card className="bg-white shadow-sm border-0">
-              <CardHeader>
-                <div className="flex justify-between items-center">
-                  <div>
-                    <CardTitle className="text-xl text-slate-800">Employee Management</CardTitle>
-                    <CardDescription>
-                      Add, edit, and manage your team members
-                    </CardDescription>
+          {isAdmin && (
+            <TabsContent value="employees" className="space-y-6">
+              <Card className="bg-white border-gray-200">
+                <CardHeader className="border-b border-gray-100">
+                  <div className="flex justify-between items-center">
+                    <div>
+                      <CardTitle className="text-xl text-gray-900">Employee Management</CardTitle>
+                      <CardDescription className="text-gray-600">
+                        Add, edit, and manage your team members
+                      </CardDescription>
+                    </div>
+                    <Button 
+                      onClick={() => {
+                        setEditingEmployee(null);
+                        setShowEmployeeForm(true);
+                      }}
+                      className="bg-red-600 hover:bg-red-700 text-white"
+                    >
+                      <Plus className="h-4 w-4 mr-2" />
+                      Add Employee
+                    </Button>
                   </div>
-                  <Button 
-                    onClick={() => {
-                      setEditingEmployee(null);
-                      setShowEmployeeForm(true);
-                    }}
-                    className="bg-blue-600 hover:bg-blue-700"
-                  >
-                    <Plus className="h-4 w-4 mr-2" />
-                    Add Employee
-                  </Button>
-                </div>
-              </CardHeader>
-              <CardContent>
-                <EmployeeList 
-                  employees={employees}
-                  onEdit={handleEditEmployee}
-                  onDelete={handleDeleteEmployee}
-                  searchQuery={employeeSearchQuery}
-                  onSearch={setEmployeeSearchQuery}
-                  positionFilter={employeePositionFilter}
-                  onPositionFilter={(value) => setEmployeePositionFilter(value === "all" ? "" : value)}
-                />
-              </CardContent>
-            </Card>
-          </TabsContent>
+                </CardHeader>
+                <CardContent className="p-6">
+                  <EmployeeList 
+                    employees={employees}
+                    onEdit={handleEditEmployee}
+                    onDelete={handleDeleteEmployee}
+                    searchQuery={employeeSearchQuery}
+                    onSearch={setEmployeeSearchQuery}
+                    positionFilter={employeePositionFilter}
+                    onPositionFilter={(value) => setEmployeePositionFilter(value === "all" ? "" : value)}
+                  />
+                </CardContent>
+              </Card>
+            </TabsContent>
+          )}
 
           <TabsContent value="tasks" className="space-y-6">
-            <Card className="bg-white shadow-sm border-0">
-              <CardHeader>
+            <Card className="bg-white border-gray-200">
+              <CardHeader className="border-b border-gray-100">
                 <div className="flex justify-between items-center">
                   <div>
-                    <CardTitle className="text-xl text-slate-800">Task Management</CardTitle>
-                    <CardDescription>
-                      Create, assign, and track tasks for your team
+                    <CardTitle className="text-xl text-gray-900">{isAdmin ? 'Task Management' : 'My Tasks'}</CardTitle>
+                    <CardDescription className="text-gray-600">
+                      {isAdmin ? 'Create, assign, and track tasks for your team' : 'View and update your assigned tasks'}
                     </CardDescription>
                   </div>
-                  <Button 
-                    onClick={() => {
-                      setEditingTask(null);
-                      setShowTaskForm(true);
-                    }}
-                    className="bg-green-600 hover:bg-green-700"
-                  >
-                    <Plus className="h-4 w-4 mr-2" />
-                    Add Task
-                  </Button>
+                  {isAdmin && (
+                    <Button 
+                      onClick={() => {
+                        setEditingTask(null);
+                        setShowTaskForm(true);
+                      }}
+                      className="bg-red-600 hover:bg-red-700 text-white"
+                    >
+                      <Plus className="h-4 w-4 mr-2" />
+                      Add Task
+                    </Button>
+                  )}
                 </div>
               </CardHeader>
-              <CardContent>
+              <CardContent className="p-6">
                 <TaskList 
-                  tasks={tasks}
+                  tasks={isAdmin ? tasks : tasks.filter(t => t.assigned_to === profile?.id)}
                   employees={employees}
-                  onEdit={handleEditTask}
-                  onDelete={handleDeleteTask}
+                  onEdit={isAdmin ? handleEditTask : undefined}
+                  onDelete={isAdmin ? handleDeleteTask : undefined}
                   onUpdateStatus={handleUpdateTaskStatus}
                   searchQuery={taskSearchQuery}
                   onSearch={setTaskSearchQuery}
@@ -459,8 +466,8 @@ const Index = () => {
           </TabsContent>
         </Tabs>
 
-        {/* Forms */}
-        {showEmployeeForm && (
+        {/* Forms (Admin only) */}
+        {isAdmin && showEmployeeForm && (
           <EmployeeForm
             employee={editingEmployee}
             onSubmit={editingEmployee ? handleUpdateEmployee : handleAddEmployee}
@@ -471,7 +478,7 @@ const Index = () => {
           />
         )}
 
-        {showTaskForm && (
+        {isAdmin && showTaskForm && (
           <TaskForm
             task={editingTask}
             profiles={employees}

@@ -9,6 +9,7 @@ interface AuthContextType {
   session: Session | null;
   profile: UserProfile | null;
   loading: boolean;
+  isAdmin: boolean;
   signIn: (name: string, password: string) => Promise<void>;
   signOut: () => Promise<void>;
 }
@@ -28,6 +29,8 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
   const [session, setSession] = useState<Session | null>(null);
   const [profile, setProfile] = useState<UserProfile | null>(null);
   const [loading, setLoading] = useState(true);
+
+  const isAdmin = profile?.role === 'admin';
 
   useEffect(() => {
     // Set up auth state listener
@@ -91,6 +94,7 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
     session,
     profile,
     loading,
+    isAdmin,
     signIn,
     signOut
   };
