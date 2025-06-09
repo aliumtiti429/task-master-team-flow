@@ -15,7 +15,7 @@ const Auth = () => {
   const navigate = useNavigate();
   
   const [signInData, setSignInData] = useState({
-    name: '',
+    email: '',
     password: ''
   });
 
@@ -33,7 +33,7 @@ const Auth = () => {
     
     setIsSubmitting(true);
     try {
-      await signIn(signInData.name, signInData.password);
+      await signIn(signInData.email, signInData.password);
       toast({
         title: "Welcome back!",
         description: "You have been signed in successfully.",
@@ -41,7 +41,7 @@ const Auth = () => {
     } catch (error: any) {
       toast({
         title: "Sign in failed",
-        description: error.message || "Invalid name or password",
+        description: error.message || "Invalid email or password",
         variant: "destructive",
       });
     } finally {
@@ -66,18 +66,18 @@ const Auth = () => {
         <Card className="shadow-xl border-0">
           <CardHeader className="text-center bg-gradient-to-r from-red-600 to-red-700 text-white rounded-t-lg">
             <CardTitle className="text-2xl font-bold">Employee Portal</CardTitle>
-            <CardDescription className="text-red-100">Sign in with your full name</CardDescription>
+            <CardDescription className="text-red-100">Sign in with your email</CardDescription>
           </CardHeader>
           <CardContent className="p-8 bg-white">
             <form onSubmit={handleSignIn} className="space-y-6">
               <div className="space-y-2">
-                <Label htmlFor="signin-name" className="text-black font-medium">Full Name</Label>
+                <Label htmlFor="signin-email" className="text-black font-medium">Email Address</Label>
                 <Input
-                  id="signin-name"
-                  type="text"
-                  value={signInData.name}
-                  onChange={(e) => setSignInData({...signInData, name: e.target.value})}
-                  placeholder="Enter your full name"
+                  id="signin-email"
+                  type="email"
+                  value={signInData.email}
+                  onChange={(e) => setSignInData({...signInData, email: e.target.value})}
+                  placeholder="Enter your email"
                   required
                   className="border-gray-300 focus:border-red-500 focus:ring-red-500"
                 />

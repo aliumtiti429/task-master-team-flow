@@ -10,7 +10,7 @@ interface AuthContextType {
   profile: UserProfile | null;
   loading: boolean;
   isAdmin: boolean;
-  signIn: (name: string, password: string) => Promise<void>;
+  signIn: (email: string, password: string) => Promise<void>;
   signOut: () => Promise<void>;
 }
 
@@ -74,9 +74,9 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
     return () => subscription.unsubscribe();
   }, []);
 
-  const signIn = async (name: string, password: string) => {
-    console.log('Attempting sign in with name:', name);
-    const { user } = await authService.signIn(name, password);
+  const signIn = async (email: string, password: string) => {
+    console.log('Attempting sign in with email:', email);
+    const { user } = await authService.signIn(email, password);
     if (user) {
       const userProfile = await authService.getUserProfile(user.id);
       console.log('Sign in successful, profile:', userProfile);

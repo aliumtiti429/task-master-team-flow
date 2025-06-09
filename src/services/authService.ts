@@ -1,4 +1,3 @@
-
 import { supabase } from "@/integrations/supabase/client";
 
 export interface UserProfile {
@@ -13,23 +12,8 @@ export interface UserProfile {
 }
 
 export const authService = {
-  async signIn(name: string, password: string) {
-    console.log('Attempting sign in with name:', name);
-    
-    // Look up email by name in employees table
-    const { data: employee, error: employeeError } = await supabase
-      .from('employees')
-      .select('email')
-      .eq('name', name)
-      .single();
-    
-    if (employeeError || !employee) {
-      console.log('Employee lookup error:', employeeError);
-      throw new Error('Employee not found with that name');
-    }
-    
-    const email = employee.email;
-    console.log('Found email for name:', email);
+  async signIn(email: string, password: string) {
+    console.log('Attempting sign in with email:', email);
     
     const { data, error } = await supabase.auth.signInWithPassword({
       email,
